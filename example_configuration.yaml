@@ -1,0 +1,15 @@
+
+influxdb:
+  database: _
+  username: _
+  password: _
+
+log_directory: log
+
+measurements:
+  sensorhub:
+    log_file: sensorhub_monitoring.log
+    period: 60
+    log_level: info
+# teleinfo:
+#   period: 1

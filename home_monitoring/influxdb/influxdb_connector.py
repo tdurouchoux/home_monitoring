@@ -4,6 +4,8 @@ import atexit
 import time
 import reactivex as rx
 from datetime import timedelta
+import logging
+
 
 import influxdb_client as idb
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -25,23 +27,24 @@ class InfluxDBConnector:
 
         self.url = f"http://{host}:{port}"
 
-        print(self.url)
-
         self.client = None
         self.write_api = None
 
     def _connect(self, write_options: idb.WriteOptions = SYNCHRONOUS) -> None:
-        # self.client = idb.InfluxDBClient(
-        #     url=self.url, username=self.username, password=self.password, org="-"
-        # )
+        logging.info(
+            f"Attempting connection to Influxdb database with url {self.url} ..."
+        )
+
         self.client = idb.InfluxDBClient(
             url=self.url, token=f"{self.username}:{self.password}", org="-"
         )
         self.write_api = self.client.write_api(write_options=write_options)
 
-        print("Successfully connected to Database")
+        logging.info("Successfully connected to Database")
 
     def close(self) -> None:
+        logging.info("Closing connection with Influxdb database.")
+
         self.write_api.close()
         self.client.close()
 
@@ -56,6 +59,8 @@ class InfluxDBConnector:
         measure_tags: Dict = None,
         time_precision: str = "ns",
     ) -> None:
+        logging.debug("Writing measure into Influxdb database ...")
+
         point = idb.Point(measurement)
 
         if time is not None:
@@ -76,8 +81,10 @@ class InfluxDBConnector:
 
             self.write_api.write(bucket=self.bucket, record=point)
 
+            logging.debug("Successfully wrote datapoint into database.")
+
         except Exception as e:
-            print(f"Failed to write data point: {e}")
+            logging.warning(f"Failed to write data point: {e}")
             self.client = None
 
     def write_batch_measures(
@@ -112,6 +119,10 @@ class InfluxDBConnector:
         time_interval: int,
         measure_tags: Dict = None,
     ) -> None:
+        logging.info(
+            f"Setting up periodic measures of {measurement} each {time_interval} seconds ..."
+        )
+
         measure_info = {"measurement": measurement}
 
         if measure_tags is not None:
@@ -135,4 +146,4 @@ class InfluxDBConnector:
 
         atexit.register(self.close)
 
-        input()
+        logging.info(f"{measurement} periodic measures setted up.")

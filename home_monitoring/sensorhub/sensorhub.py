@@ -1,23 +1,30 @@
-import click
+from typing import Dict
+import logging
 
 from home_monitoring.sensorhub.sensor_connector import SensorConnector
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
 
-INFLUX_DATABASE = "home_monitor"
+MEASUREMENT_NAME = "sensorhub"
 
 
-@click.command()
-@click.argument("period", default=60)
-@click.option("--database", defautl)
-def main():
+def monitor_sensors(
+    influxdb_config: Dict,
+    period: int,
+    log_file: str = None,
+    log_level=logging.INFO,
+):
+    if log_file is not None:
+        logging.basicConfig(
+            filename=log_file,
+            level=log_level,
+            format="%(asctime)s -- %(levelname)s | %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+
     sensor_connector = SensorConnector()
 
-    influxdb_connector = InfluxDBConnector("test", "admin", "dashmaster")
+    influxdb_connector = InfluxDBConnector(**influxdb_config)
 
     influxdb_connector.periodic_measures(
-        "test_sensorhub", sensor_connector.get_all_sensors, period
+        MEASUREMENT_NAME, sensor_connector.get_all_sensors, period
     )
-
-
-if __name__ == "__main__":
-    main()
