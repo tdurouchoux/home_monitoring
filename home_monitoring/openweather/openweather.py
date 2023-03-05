@@ -2,26 +2,27 @@ from typing import Dict
 import logging
 
 from home_monitoring.utils import logger_factory
-from home_monitoring.sensorhub.sensor_connector import SensorConnector
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
+from home_monitoring.openweather.openweather_api import CurrentWeatherApi
 
-MEASUREMENT_NAME = "sensorhub"
+CURR_WEATHER_MEASUREMENT_NAME = "openweather_current_weather"
 
 
-def monitor_sensors(
+def monitor_openweather(
     influxdb_config: Dict,
     period: int,
+    current_weather_location: str,
     log_file: str = None,
     log_level=logging.INFO,
 ):
     if log_file is not None:
-        logger = logger_factory("sensorhub", log_file, log_level=log_level)
+        logger = logger_factory("openweather", log_file, log_level=log_level)
     else:
         logger = logging
 
-    logger.info("Setting up sensorhub connection ...")
+    logger.info("Setting up current weather openweather api ...")
 
-    sensor_connector = SensorConnector(logger=logger)
+    current_weather_api = CurrentWeatherApi(current_weather_location, logger=logger)
 
     logger.info("Setting up influxdb connection ...")
 
@@ -33,7 +34,7 @@ def monitor_sensors(
     )
 
     influxdb_connector.periodic_measures(
-        MEASUREMENT_NAME, sensor_connector.get_all_sensors, period
+        CURR_WEATHER_MEASUREMENT_NAME, current_weather_api.query_api, period
     )
 
-    logger.info(f"Launching {MEASUREMENT_NAME} measures ...")
+    logger.info(f"Launching {CURR_WEATHER_MEASUREMENT_NAME} measures ...")

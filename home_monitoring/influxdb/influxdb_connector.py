@@ -20,6 +20,7 @@ class InfluxDBConnector:
         retention_policy="autogen",
         host="localhost",
         port=8086,
+        logger=logging,
     ) -> None:
         self.bucket = f"{database}/{retention_policy}"
         self.username = username
@@ -30,8 +31,10 @@ class InfluxDBConnector:
         self.client = None
         self.write_api = None
 
+        self.logger = logger
+
     def _connect(self, write_options: idb.WriteOptions = SYNCHRONOUS) -> None:
-        logging.info(
+        self.logger.info(
             f"Attempting connection to Influxdb database with url {self.url} ..."
         )
 
@@ -40,10 +43,10 @@ class InfluxDBConnector:
         )
         self.write_api = self.client.write_api(write_options=write_options)
 
-        logging.info("Successfully connected to Database")
+        self.logger.info("Successfully connected to Database")
 
     def close(self) -> None:
-        logging.info("Closing connection with Influxdb database.")
+        self.logger.info("Closing connection with Influxdb database.")
 
         self.write_api.close()
         self.client.close()
@@ -59,7 +62,7 @@ class InfluxDBConnector:
         measure_tags: Dict = None,
         time_precision: str = "ns",
     ) -> None:
-        logging.debug("Writing measure into Influxdb database ...")
+        self.logger.debug("Writing measure into Influxdb database ...")
 
         point = idb.Point(measurement)
 
@@ -81,10 +84,10 @@ class InfluxDBConnector:
 
             self.write_api.write(bucket=self.bucket, record=point)
 
-            logging.debug("Successfully wrote datapoint into database.")
+            self.logger.debug("Successfully wrote datapoint into database.")
 
         except Exception as e:
-            logging.warning(f"Failed to write data point: {e}")
+            self.logger.warning(f"Failed to write data point: {e}")
             self.client = None
 
     def write_batch_measures(
@@ -97,6 +100,8 @@ class InfluxDBConnector:
         max_retries: int = 5,
         retry_interval: float = 0.01,
     ) -> None:
+        self.logger.debug("Starting batch writing ...")
+
         for data, time in zip(data_points, time_points):
             for i in range(max_retries):
                 self.write_measure(
@@ -119,7 +124,7 @@ class InfluxDBConnector:
         time_interval: int,
         measure_tags: Dict = None,
     ) -> None:
-        logging.info(
+        self.logger.info(
             f"Setting up periodic measures of {measurement} each {time_interval} seconds ..."
         )
 
@@ -134,7 +139,7 @@ class InfluxDBConnector:
             return measure
 
         readings = rx.interval(period=timedelta(seconds=time_interval)).pipe(
-            rx.operators.map(lambda i: format_measure())
+            rx.operators.map(lambda i: format_measure()),
         )
 
         if self.client is not None:
@@ -146,4 +151,4 @@ class InfluxDBConnector:
 
         atexit.register(self.close)
 
-        logging.info(f"{measurement} periodic measures setted up.")
+        self.logger.info(f"{measurement} periodic measures setted up.")
