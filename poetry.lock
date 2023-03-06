@@ -154,6 +154,23 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "tqdm"
+version = "4.65.0"
+description = "Fast, Extensible Progress Meter"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+colorama = {version = "*", markers = "platform_system == \"Windows\""}
+
+[package.extras]
+dev = ["py-make (>=0.1.0)", "twine", "wheel"]
+notebook = ["ipywidgets (>=6)"]
+slack = ["slack-sdk"]
+telegram = ["requests"]
+
+[[package]]
 name = "typing-extensions"
 version = "4.4.0"
 description = "Backported and Experimental Type Hints for Python 3.7+"
@@ -177,7 +194,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "3.9.2"
-content-hash = "f0ac21c214f8712f6b894cac041f85f73e95bb33978899ace4fdbabdeb3df08e"
+content-hash = "652324a94759b04f56d0a9eaae7a1ee391cafbf7c52ba1b504586ab070e5b61b"
 
 [metadata.files]
 certifi = [
@@ -275,6 +292,10 @@ smbus = [
     {file = "smbus-1.1.post2-cp34-cp34m-linux_armv7l.whl", hash = "sha256:39923448455a41c6bbe823de62b191103dd711917056362d9e4b1d2c6ec0f06d"},
     {file = "smbus-1.1.post2-cp35-cp35m-linux_armv7l.whl", hash = "sha256:b467235734ae5c147c4ec0eff1afb9dba189d9d3cc086ed7e0d3dbf0ae485230"},
     {file = "smbus-1.1.post2.tar.gz", hash = "sha256:f96d345e0aa10053a8a4917634f1dc37ba1f656fa5cace7629b71777e90855c6"},
+]
+tqdm = [
+    {file = "tqdm-4.65.0-py3-none-any.whl", hash = "sha256:c4f53a17fe37e132815abceec022631be8ffe1b9381c2e6e30aa70edc99e9671"},
+    {file = "tqdm-4.65.0.tar.gz", hash = "sha256:1871fb68a86b8fb3b59ca4cdd3dcccbc7e6d613eeed31f4c332531977b89beb5"},
 ]
 typing-extensions = [
     {file = "typing_extensions-4.4.0-py3-none-any.whl", hash = "sha256:16fa4864408f655d35ec496218b85f79b3437c829e93320c7c9215ccfd92489e"},

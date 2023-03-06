@@ -117,30 +117,20 @@ class InfluxDBConnector:
 
                 time.sleep(retry_interval)
 
-    def periodic_measures(
-        self,
-        measurement: str,
-        get_measurement: Callable,
-        time_interval: int,
-        measure_tags: Dict = None,
+    def write_observable(
+        self, measurement: str, observable: rx.Observable, measure_tags: Dict = None
     ) -> None:
-        self.logger.info(
-            f"Setting up periodic measures of {measurement} each {time_interval} seconds ..."
-        )
-
         measure_info = {"measurement": measurement}
 
         if measure_tags is not None:
             measure_info["tags"] = measure_tags
 
-        def format_measure() -> Dict:
-            measure = {"fields": get_measurement()}
+        def format_measures(measures: Dict) -> Dict:
+            measure = {"fields": measures}
             measure.update(measure_info)
             return measure
 
-        readings = rx.interval(period=timedelta(seconds=time_interval)).pipe(
-            rx.operators.map(lambda i: format_measure()),
-        )
+        readings = observable.map(format_measures)
 
         if self.client is not None:
             self.close()
@@ -151,4 +141,23 @@ class InfluxDBConnector:
 
         atexit.register(self.close)
 
-        self.logger.info(f"{measurement} periodic measures setted up.")
+    # Delete this function and create observables from clients
+
+    # def periodic_measures(
+    #     self,
+    #     measurement: str,
+    #     get_measurement: Callable,
+    #     time_interval: int,
+    #     measure_tags: Dict = None,
+    # ) -> None:
+    #     self.logger.info(
+    #         f"Setting up periodic measures of {measurement} each {time_interval} seconds ..."
+    #     )
+
+    #     interval_obs = rx.interval(period=timedelta(seconds=time_interval)).map(
+    #         lambda i: get_measurement()
+    #     )
+
+    #     self.write_observable(measurement, interval_obs, measure_tags=measure_tags)
+
+    #     self.logger.info(f"{measurement} periodic measures setted up.")
