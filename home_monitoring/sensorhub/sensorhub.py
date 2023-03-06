@@ -1,6 +1,9 @@
 from typing import Dict
 import logging
 
+from datetime import timedelta
+import reactivex as rx
+
 from home_monitoring.utils import logger_factory
 from home_monitoring.sensorhub.sensor_connector import SensorConnector
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
@@ -32,8 +35,14 @@ def monitor_sensors(
         logger=logger,
     )
 
-    influxdb_connector.periodic_measures(
-        MEASUREMENT_NAME, sensor_connector.get_all_sensors, period
+    logger.info(
+        f"Creating sensorhub observable taking measurement every {period} seconds"
     )
+
+    sensor_obs = rx.interval(period=timedelta(seconds=period)).pipe(
+        rx.operators.map(lambda i: sensor_connector.get_all_sensors())
+    )
+
+    influxdb_connector.write_observable(MEASUREMENT_NAME, sensor_obs)
 
     logger.info(f"Launching {MEASUREMENT_NAME} measures ...")

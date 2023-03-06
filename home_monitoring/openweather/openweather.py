@@ -1,6 +1,9 @@
 from typing import Dict
 import logging
 
+from datetime import timedelta
+import reactivex as rx
+
 from home_monitoring.utils import logger_factory
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
 from home_monitoring.openweather.openweather_api import CurrentWeatherApi
@@ -33,8 +36,14 @@ def monitor_openweather(
         logger=logger,
     )
 
-    influxdb_connector.periodic_measures(
-        CURR_WEATHER_MEASUREMENT_NAME, current_weather_api.query_api, period
+    logger.info(
+        f"Creating openweather api observable making requests every {period} seconds"
     )
+
+    openweather_obs = rx.interval(period=timedelta(seconds=period)).pipe(
+        rx.operators.map(lambda i: current_weather_api.query_api())
+    )
+
+    influxdb_connector.write_observable(CURR_WEATHER_MEASUREMENT_NAME, openweather_obs)
 
     logger.info(f"Launching {CURR_WEATHER_MEASUREMENT_NAME} measures ...")

@@ -3,7 +3,6 @@ from typing import Dict, List, Callable
 import atexit
 import time
 import reactivex as rx
-from datetime import timedelta
 import logging
 
 
@@ -118,8 +117,10 @@ class InfluxDBConnector:
                 time.sleep(retry_interval)
 
     def write_observable(
-        self, measurement: str, observable: rx.Observable, measure_tags: Dict = None
+        self, measurement: str, measures_obs: rx.Observable, measure_tags: Dict = None
     ) -> None:
+        self.logger.info("Setting up observable ...")
+
         measure_info = {"measurement": measurement}
 
         if measure_tags is not None:
@@ -130,34 +131,15 @@ class InfluxDBConnector:
             measure.update(measure_info)
             return measure
 
-        readings = observable.map(format_measures)
+        measures_obs = measures_obs.pipe(rx.operators.map(format_measures))
 
         if self.client is not None:
             self.close()
 
         self._connect(write_options=idb.WriteOptions(batch_size=1))
 
-        self.write_api.write(bucket=self.bucket, record=readings)
+        self.write_api.write(bucket=self.bucket, record=measures_obs)
 
         atexit.register(self.close)
 
-    # Delete this function and create observables from clients
-
-    # def periodic_measures(
-    #     self,
-    #     measurement: str,
-    #     get_measurement: Callable,
-    #     time_interval: int,
-    #     measure_tags: Dict = None,
-    # ) -> None:
-    #     self.logger.info(
-    #         f"Setting up periodic measures of {measurement} each {time_interval} seconds ..."
-    #     )
-
-    #     interval_obs = rx.interval(period=timedelta(seconds=time_interval)).map(
-    #         lambda i: get_measurement()
-    #     )
-
-    #     self.write_observable(measurement, interval_obs, measure_tags=measure_tags)
-
-    #     self.logger.info(f"{measurement} periodic measures setted up.")
+        self.logger.info("Observable setted up.")
