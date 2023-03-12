@@ -5,10 +5,11 @@ import click
 import yaml
 import logging
 
+from home_monitoring.utils import logger_factory
 from home_monitoring.sensorhub import sensorhub
 from home_monitoring.openweather import openweather
 from home_monitoring.teleinfo import teleinfo
-from home_monitoring.utils import logger_factory
+from home_monitoring.bme_sensor import bme_sensor
 
 
 def load_config(config_file: str) -> Dict:
@@ -51,6 +52,8 @@ def main(config_file: str) -> None:
             openweather.monitor_openweather(influxdb_config, **m_config)
         elif measurement == "teleinfo":
             teleinfo.monitor_teleinfo(influxdb_config, **m_config)
+        elif measurement == "bme688":
+            bme_sensor.monitor_sensor(influxdb_config, **m_config)
 
     main_logger.info("Finished configuration, launching monitoring ...")
 
