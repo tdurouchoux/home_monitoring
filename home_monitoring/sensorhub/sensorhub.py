@@ -4,7 +4,7 @@ import logging
 from datetime import timedelta
 import reactivex as rx
 
-from home_monitoring.utils import logger_factory
+from home_monitoring.utils import logger_factory, handle_errors_observable
 from home_monitoring.sensorhub.sensor_connector import SensorConnector
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
 
@@ -14,9 +14,10 @@ MEASUREMENT_NAME = "sensorhub"
 def monitor_sensors(
     influxdb_config: Dict,
     period: int,
+    nb_retry: int = 2,
     log_file: str = None,
     log_level=logging.INFO,
-):
+) -> None:
     if log_file is not None:
         logger = logger_factory("sensorhub", log_file, log_level=log_level)
     else:
@@ -42,6 +43,7 @@ def monitor_sensors(
     sensor_obs = rx.interval(period=timedelta(seconds=period)).pipe(
         rx.operators.map(lambda i: sensor_connector.get_all_sensors())
     )
+    sensor_obs = handle_errors_observable(sensor_obs, nb_retry, logger=logger)
 
     influxdb_connector.write_observable(MEASUREMENT_NAME, sensor_obs)
 

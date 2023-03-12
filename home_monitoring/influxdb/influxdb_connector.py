@@ -53,6 +53,7 @@ class InfluxDBConnector:
         self.write_api = None
         self.client = None
 
+    # batch size
     def write_measure(
         self,
         measurement: str,
@@ -60,6 +61,7 @@ class InfluxDBConnector:
         time: int = None,
         measure_tags: Dict = None,
         time_precision: str = "ns",
+        batch_size: int = 1,
     ) -> None:
         self.logger.debug("Writing measure into Influxdb database ...")
 
@@ -79,7 +81,7 @@ class InfluxDBConnector:
 
         try:
             if self.client is None:
-                self._connect()
+                self._connect(write_options=idb.WriteOptions(batch_size=batch_size))
 
             self.write_api.write(bucket=self.bucket, record=point)
 
@@ -88,33 +90,6 @@ class InfluxDBConnector:
         except Exception as e:
             self.logger.warning(f"Failed to write data point: {e}")
             self.client = None
-
-    def write_batch_measures(
-        self,
-        measurement: str,
-        data_points: List[Dict],
-        time_points: List[int],
-        measure_tags: Dict = None,
-        time_precision: str = "ns",
-        max_retries: int = 5,
-        retry_interval: float = 0.01,
-    ) -> None:
-        self.logger.debug("Starting batch writing ...")
-
-        for data, time in zip(data_points, time_points):
-            for i in range(max_retries):
-                self.write_measure(
-                    measurement,
-                    data,
-                    time=time,
-                    measure_tags=measure_tags,
-                    time_precision=time_precision,
-                )
-
-                if self.client is not None:
-                    break
-
-                time.sleep(retry_interval)
 
     def write_observable(
         self, measurement: str, measures_obs: rx.Observable, measure_tags: Dict = None
