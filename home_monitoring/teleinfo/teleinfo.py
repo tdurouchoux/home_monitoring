@@ -1,6 +1,9 @@
 from typing import Dict
 import logging
 
+import reactivex as rx
+from reactivex.scheduler import ThreadPoolScheduler
+
 from home_monitoring.utils import logger_factory, handle_errors_observable
 from home_monitoring.teleinfo.teleinfo_connector import TeleinfoConnector
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
@@ -10,6 +13,7 @@ MEASUREMENT_NAME = "teleinfo"
 
 def monitor_teleinfo(
     influxdb_config: Dict,
+    scheduler: ThreadPoolScheduler,
     serial_port: str,
     nb_retry: int = 3,
     log_file: str = None,
@@ -36,6 +40,7 @@ def monitor_teleinfo(
     logger.info(f"Creating teleinfo observable ... ")
 
     teleinfo_obs = teleinfo_connector.create_observable()
+    teleinfo_obs = teleinfo_obs.pipe(rx.operators.subscribe_on(scheduler))
     teleinfo_obs = handle_errors_observable(teleinfo_obs, nb_retry, logger=logger)
 
     logger.info("Observable setted up.")

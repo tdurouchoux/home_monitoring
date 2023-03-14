@@ -1,8 +1,9 @@
 from typing import Dict
 import logging
-
 from datetime import timedelta
+
 import reactivex as rx
+from reactivex.scheduler import ThreadPoolScheduler
 
 from home_monitoring.utils import logger_factory, handle_errors_observable
 from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
@@ -13,6 +14,7 @@ CURR_WEATHER_MEASUREMENT_NAME = "openweather_current_weather"
 
 def monitor_openweather(
     influxdb_config: Dict,
+    scheduler: ThreadPoolScheduler,
     period: int,
     current_weather_location: str,
     nb_retry: int = 3,
@@ -42,7 +44,8 @@ def monitor_openweather(
     )
 
     openweather_obs = rx.interval(period=timedelta(seconds=period)).pipe(
-        rx.operators.map(lambda i: current_weather_api.query_api())
+        rx.operators.map(lambda i: current_weather_api.query_api()),
+        rx.operators.subscribe_on(scheduler),
     )
     openweather_obs = handle_errors_observable(openweather_obs, nb_retry, logger=logger)
 

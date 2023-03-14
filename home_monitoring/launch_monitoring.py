@@ -4,6 +4,9 @@ import os
 import click
 import yaml
 import logging
+import time
+
+from reactivex.scheduler import ThreadPoolScheduler
 
 from home_monitoring.utils import logger_factory
 from home_monitoring.sensorhub import sensorhub
@@ -43,21 +46,26 @@ def main(config_file: str) -> None:
 
     main_logger.info("Starting monitoring, setting up measurements ... ")
 
+    scheduler = ThreadPoolScheduler(len(config["measurements"]))
+
     for measurement, m_config in config["measurements"].items():
         main_logger.info(f"Adding measurement {measurement} ...")
 
         if measurement == "sensorhub":
-            sensorhub.monitor_sensors(influxdb_config, **m_config)
+            sensorhub.monitor_sensors(influxdb_config, scheduler, **m_config)
         elif measurement == "openweather":
-            openweather.monitor_openweather(influxdb_config, **m_config)
+            openweather.monitor_openweather(influxdb_config, scheduler, **m_config)
         elif measurement == "teleinfo":
-            teleinfo.monitor_teleinfo(influxdb_config, **m_config)
+            teleinfo.monitor_teleinfo(influxdb_config, scheduler, **m_config)
         elif measurement == "bme688":
-            bme_sensor.monitor_sensor(influxdb_config, **m_config)
+            bme_sensor.monitor_sensor(influxdb_config, scheduler, **m_config)
 
     main_logger.info("Finished configuration, launching monitoring ...")
 
-    input()
+    while True:
+        time.sleep(10000)
+
+    main_logger.info("Stopping monitoring script.")
 
 
 if __name__ == "__main__":

@@ -29,6 +29,9 @@ requests = "^2.28.1"
 [tool.poetry.group.teleinfo.dependencies]
 pyserial = "^3.5"
 
+[tool.poetry.scripts]
+launch_monitoring = "home_monitoring.launch_monitoring:main"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

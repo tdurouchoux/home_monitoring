@@ -3,6 +3,7 @@ import logging
 
 from datetime import timedelta
 import reactivex as rx
+from reactivex.scheduler import ThreadPoolScheduler
 
 from home_monitoring.utils import logger_factory, handle_errors_observable
 from home_monitoring.bme_sensor import bme680
@@ -42,6 +43,7 @@ def get_sensor_measures(sensor: bme680.BME680) -> Dict:
 
 def monitor_sensor(
     influxdb_config: Dict,
+    scheduler: ThreadPoolScheduler,
     period: int,
     nb_retry: int = 2,
     log_file: str = None,
@@ -69,7 +71,8 @@ def monitor_sensor(
     logger.info(f"Creating bme688 observable taking measurement every {period} seconds")
 
     sensor_obs = rx.interval(period=timedelta(seconds=period)).pipe(
-        rx.operators.map(lambda i: get_sensor_measures(sensor))
+        rx.operators.map(lambda i: get_sensor_measures(sensor)),
+        rx.operators.subscribe_on(scheduler),
     )
     sensor_obs = handle_errors_observable(sensor_obs, nb_retry, logger=logger)
 

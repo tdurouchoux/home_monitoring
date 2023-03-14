@@ -1,8 +1,9 @@
 from typing import Dict
 import logging
-
 from datetime import timedelta
+
 import reactivex as rx
+from reactivex.scheduler import ThreadPoolScheduler
 
 from home_monitoring.utils import logger_factory, handle_errors_observable
 from home_monitoring.sensorhub.sensor_connector import SensorConnector
@@ -13,6 +14,7 @@ MEASUREMENT_NAME = "sensorhub"
 
 def monitor_sensors(
     influxdb_config: Dict,
+    scheduler: ThreadPoolScheduler,
     period: int,
     nb_retry: int = 2,
     log_file: str = None,
@@ -41,7 +43,8 @@ def monitor_sensors(
     )
 
     sensor_obs = rx.interval(period=timedelta(seconds=period)).pipe(
-        rx.operators.map(lambda i: sensor_connector.get_all_sensors())
+        rx.operators.map(lambda i: sensor_connector.get_all_sensors()),
+        rx.operators.subscribe_on(scheduler),
     )
     sensor_obs = handle_errors_observable(sensor_obs, nb_retry, logger=logger)
 
