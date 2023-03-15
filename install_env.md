@@ -32,5 +32,6 @@ CREATE USER <username> WITH PASSWORD '<password>'
 GRANT [READ,WRITE,ALL] ON <database_name> TO <username>
 5. Setup authentification :  
 set auth-enabled to "true" in /etc/influxdb/influxdb.conf
+set flux-enabled to "true" in /etc/influxdb/influxdb.conf
 6. Restart influxdb : 
 systemctl restart influxdb
