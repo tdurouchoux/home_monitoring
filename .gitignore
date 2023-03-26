@@ -1,3 +1,6 @@
+# main script file
+launch_monitoring.sh
+
 #Config and log directory
 log/
 config/
