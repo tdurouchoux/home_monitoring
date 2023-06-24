@@ -13,14 +13,6 @@ from home_monitoring.influxdb.influxdb_connector import InfluxDBConnector
 
 MEASUREMENT_NAME = "bme280"
 
-
-bus = SMBus(1)
-bme280 = BME280(i2c_dev=bus)
-
-
-print(f"Temperature : {bme280.get_temperature()}")
-print(f"Humidity : {bme280.get_humidity()}")
-
 LOG_KEYS = [
     "temperature",
     "pressure",
