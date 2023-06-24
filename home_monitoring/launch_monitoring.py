@@ -13,6 +13,7 @@ from home_monitoring.sensorhub import sensorhub
 from home_monitoring.openweather import openweather
 from home_monitoring.teleinfo import teleinfo
 from home_monitoring.bme_sensor import bme_sensor
+from home_monitoring.bme_sensor import bme280_sensor
 from home_monitoring.system_usage import system_usage
 
 
@@ -60,9 +61,12 @@ def main(config_file: str) -> None:
             teleinfo.monitor_teleinfo(influxdb_config, scheduler, **m_config)
         elif measurement == "bme688":
             bme_sensor.monitor_sensor(influxdb_config, scheduler, **m_config)
+        elif measurement == "bme280":
+            bme280_sensor.monitor_sensor(influxdb_config, scheduler, **m_config)
         elif measurement.startswith("system"):
-            system_usage.monitor_system(influxdb_config, scheduler, measurement_name=measurement, **m_config)
-
+            system_usage.monitor_system(
+                influxdb_config, scheduler, measurement_name=measurement, **m_config
+            )
 
     main_logger.info("Finished configuration, launching monitoring ...")
 

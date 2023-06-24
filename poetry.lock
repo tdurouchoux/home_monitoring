@@ -34,6 +34,14 @@ optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
 
 [[package]]
+name = "i2cdevice"
+version = "0.0.7"
+description = "Python DSL for interacting with SMBus-compatible i2c devices"
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "idna"
 version = "3.4"
 description = "Internationalized Domain Names in Applications (IDNA)"
@@ -61,6 +69,17 @@ async = ["aiocsv (>=1.2.2)", "aiohttp (>=3.8.1)"]
 ciso = ["ciso8601 (>=2.1.1)"]
 extra = ["numpy", "pandas (>=0.25.3)"]
 test = ["aioresponses (>=0.7.3)", "coverage (>=4.0.3)", "flake8 (>=5.0.3)", "httpretty (==1.0.5)", "jinja2 (==3.1.2)", "nose (>=1.3.7)", "pluggy (>=0.3.1)", "psutil (>=5.6.3)", "py (>=1.4.31)", "pytest (>=5.0.0)", "pytest-cov (>=3.0.0)", "pytest-timeout (>=2.1.0)", "randomize (>=0.13)", "sphinx (==1.8.5)", "sphinx-rtd-theme"]
+
+[[package]]
+name = "pimoroni-bme280"
+version = "0.1.1"
+description = "Python library for the bme280 temperature, pressure and humidity sensor"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+i2cdevice = ">=0.0.6"
 
 [[package]]
 name = "psutil"
@@ -202,7 +221,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "3.9.2"
-content-hash = "66de49efa5862353f41a52744e34a391775c920fa6193a7fc0b493fffbb82dda"
+content-hash = "adf202affa1f93f3198b8e9b7af0e004b5e085c68bc463d30a7fe47abb6b5e27"
 
 [metadata.files]
 certifi = [
@@ -294,6 +313,11 @@ colorama = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
+i2cdevice = [
+    {file = "i2cdevice-0.0.7-py2-none-any.whl", hash = "sha256:247e536e6a5398d87db8f9a3a0c0c11f0f12f84ec58f4e43b0cd325a19ec23bc"},
+    {file = "i2cdevice-0.0.7-py3-none-any.whl", hash = "sha256:a80e59e280a7992691f9e30705f24bc650c9e694ba781277d47bef02d2b0276c"},
+    {file = "i2cdevice-0.0.7.tar.gz", hash = "sha256:fb6dafcbf654a9de732adb51c99a0aded31cfa924ea0b78b1583944c00a9235c"},
+]
 idna = [
     {file = "idna-3.4-py3-none-any.whl", hash = "sha256:90b77e79eaa3eba6de819a0c442c0b4ceefc341a7a2ab77d7562bf49f425c5c2"},
     {file = "idna-3.4.tar.gz", hash = "sha256:814f528e8dead7d329833b91c5faa87d60bf71824cd12a7530b5526063d02cb4"},
@@ -301,6 +325,11 @@ idna = [
 influxdb-client = [
     {file = "influxdb_client-1.36.1-py3-none-any.whl", hash = "sha256:a5a8d840139431356235f6c786cd49740ed545b6e99be62ae3fb6ba5df1d982b"},
     {file = "influxdb_client-1.36.1.tar.gz", hash = "sha256:59654af4f7133f0ecf916411935b50f42e5c4bc125d218e193848f3615b57bfc"},
+]
+pimoroni-bme280 = [
+    {file = "pimoroni-bme280-0.1.1.tar.gz", hash = "sha256:2b765bef20d6ca7969fa70119bdf04d9cb81b57587fefa875e3bef4f8ce63f12"},
+    {file = "pimoroni_bme280-0.1.1-py2-none-any.whl", hash = "sha256:b3c24df2d92f149bce87b2d82d4e57c38af832fe5d169741dbef2181b435d5ce"},
+    {file = "pimoroni_bme280-0.1.1-py3-none-any.whl", hash = "sha256:089bccd5b16345117ee7152f65ed7547bb5496bc074ba3cb2061187c263c290c"},
 ]
 psutil = [
     {file = "psutil-5.9.4-cp27-cp27m-macosx_10_9_x86_64.whl", hash = "sha256:c1ca331af862803a42677c120aff8a814a804e09832f166f226bfd22b56feee8"},
