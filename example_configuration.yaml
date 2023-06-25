@@ -1,0 +1,17 @@
+
+influxdb:
+  database: _
+  username: _
+  password: _
+
+log_directory: &log_dir log
+main_log_file: !path_join [*log_dir, launch_monitoring.log]
+
+measurements:
+  sensorhub:
+    period: 60
+    nb_retry: 1
+    log_file: !path_join [*log_dir, sensorhub_monitoring.log]
+    log_level: !log_level info
+# teleinfo:
+#   period: 1

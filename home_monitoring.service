@@ -1,0 +1,12 @@
+[Unit]
+Description=Launch data measures and log into InfluxDB
+Requires=influxdb.service
+After=influxdb.service
+
+[Service]
+Type=simple
+Restart=always
+ExecStart=/home/pi/home_monitoring/launch_monitoring.sh
+
+[Install]
+WantedBy=multi-user.target
