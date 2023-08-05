@@ -13,7 +13,7 @@ reactivex = "^4.0.4"
 pyyaml = "^6.0"
 click = "^8.1.3"
 tqdm = "^4.65.0"
-pimoroni-bme280 = "^0.1.1"
+
 
 [tool.poetry.group.sensorhub]
 
@@ -34,6 +34,21 @@ pyserial = "^3.5"
 
 [tool.poetry.group.system_usage.dependencies]
 psutil = "^5.9.4"
+
+[tool.poetry.group.bme_sensor]
+
+[tool.poetry.group.bme_sensor.dependencies]
+pimoroni-bme280 = "^0.1.1"
+
+
+[[tool.poetry.source]]
+name = "piwheels"
+url = "https://www.piwheels.org/simple"
+priority = 'default'
+
+[[tool.poetry.source]]
+name = "PyPI"
+priority = 'primary'
 
 [tool.poetry.scripts]
 launch_monitoring = "home_monitoring.launch_monitoring:main"
