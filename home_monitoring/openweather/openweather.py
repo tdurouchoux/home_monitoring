@@ -17,6 +17,7 @@ def monitor_openweather(
     scheduler: ThreadPoolScheduler,
     period: int,
     current_weather_location: str,
+    api_key: str,
     nb_retry: int = 3,
     log_file: str = None,
     log_level=logging.INFO,
@@ -28,7 +29,9 @@ def monitor_openweather(
 
     logger.info("Setting up current weather openweather api ...")
 
-    current_weather_api = CurrentWeatherApi(current_weather_location, logger=logger)
+    current_weather_api = CurrentWeatherApi(
+        current_weather_location, api_key, logger=logger
+    )
 
     logger.info("Setting up influxdb connection ...")
 

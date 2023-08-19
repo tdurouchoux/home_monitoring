@@ -3,11 +3,10 @@ import logging
 import requests
 from datetime import datetime
 
-API_KEY = "892584c6da65b957cfa46b34d183cc83"
-
 
 class OpenweatherApi(ABC):
-    def __init__(self, logger=logging) -> None:
+    def __init__(self, api_key: str, logger=logging) -> None:
+        self.api_key = api_key
         self.logger = logger
 
     @staticmethod
@@ -69,7 +68,7 @@ class CurrentWeatherApi(OpenweatherApi):
         "cloud_cover": ("clouds", "all"),
     }
 
-    def __init__(self, city: str, logger=logging) -> None:
-        super().__init__(logger=logger)
+    def __init__(self, city: str, api_key: str, logger=logging) -> None:
+        super().__init__(api_key, logger=logger)
 
-        self.query = self.raw_query.format(city, API_KEY)
+        self.query = self.raw_query.format(city, self.api_key)
