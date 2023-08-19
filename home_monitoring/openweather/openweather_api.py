@@ -68,7 +68,7 @@ class CurrentWeatherApi(OpenweatherApi):
         "cloud_cover": ("clouds", "all"),
     }
 
-    def __init__(self, city: str, logger=logging) -> None:
-        super().__init__(logger=logger)
+    def __init__(self, city: str, api_key: str, logger=logging) -> None:
+        super().__init__(api_key, logger=logger)
 
         self.query = self.raw_query.format(city, self.api_key)
