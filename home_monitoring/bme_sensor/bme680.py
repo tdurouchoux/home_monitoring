@@ -399,6 +399,10 @@ class BME680(BME680Data):
                     adc_gas_res_low, gas_range_l
                 )
 
+            self.data.aqi = round(
+                math.log(self.data.gas_resistance) + 0.04 * self.data.humidity, 1
+            )
+
             return True
 
         return False

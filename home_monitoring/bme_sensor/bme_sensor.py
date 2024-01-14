@@ -18,6 +18,7 @@ LOG_KEYS = [
     "pressure",
     "humidity",
     "gas_resistance",
+    "aqi",
 ]
 
 
