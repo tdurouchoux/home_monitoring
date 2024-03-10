@@ -1,7 +1,10 @@
-import smbus
-import time
-
 import logging
+from typing import Dict
+
+import smbus
+
+from home_monitoring.measurement_logger import IntervalMeasurementLogger
+from home_monitoring import config
 
 DEVICE_BUS = 1
 DEVICE_ADDR = 0x17
@@ -20,28 +23,29 @@ BMP280_PRESSURE_REG_H = 0x0B
 BMP280_STATUS = 0x0C
 HUMAN_DETECT = 0x0D
 
+logger = logging.getLogger(__name__)
 
-class SensorConnector:
-    def __init__(self, logger=logging):
+
+class SensorHubConnector:
+    def __init__(self):
         self.bus = smbus.SMBus(DEVICE_BUS)
-        self.logger = logger
 
     def _get_off_chip_temp(self, sensors_status):
         if sensors_status & 0x01:
-            self.logger.warning("Off-chip temperature sensor overrange !")
+            logger.warning("Off-chip temperature sensor overrange !")
             return None
         elif sensors_status & 0x02:
-            self.logger.error("No external temperature sensor !")
+            logger.error("No external temperature sensor !")
             return None
         else:
             return self.bus.read_byte_data(DEVICE_ADDR, TEMP_REG)
 
     def _get_brightness(self, sensors_status):
         if sensors_status & 0x04:
-            self.logger.warning("Onboard brightness sensor overrange !")
+            logger.warning("Onboard brightness sensor overrange !")
             return 0
         elif sensors_status & 0x08:
-            self.logger.error("Onboard brightness sensor failure !")
+            logger.error("Onboard brightness sensor failure !")
             return 0
         else:
             return self.bus.read_byte_data(
@@ -50,7 +54,7 @@ class SensorConnector:
 
     def _get_on_chip_hum_sensor(self):
         if self.bus.read_byte_data(DEVICE_ADDR, ON_BOARD_SENSOR_ERROR) != 0:
-            self.logger.warning(
+            logger.warning(
                 "Onboard temperature and humidity sensor data may not be up to date !"
             )
 
@@ -61,7 +65,7 @@ class SensorConnector:
 
     def _get_pressure_sensor(self):
         if self.bus.read_byte_data(DEVICE_ADDR, BMP280_STATUS) != 0:
-            self.logger.error("Onboard barometer works abnormally!")
+            logger.error("Onboard barometer works abnormally!")
 
         temp_barometer = self.bus.read_byte_data(DEVICE_ADDR, BMP280_TEMP_REG)
         pressure = (
@@ -77,7 +81,7 @@ class SensorConnector:
         return bool(self.bus.read_byte_data(DEVICE_ADDR, HUMAN_DETECT))
 
     def get_all_sensors(self):
-        self.logger.debug("Starting sensors data aquisition")
+        logger.debug("Starting sensors data aquisition")
 
         sensors_dict = {}
 
@@ -99,6 +103,23 @@ class SensorConnector:
 
         sensors_dict["HumanDetected"] = self._get_movement_detection()
 
-        self.logger.debug("Sensors Data aquisition finished")
+        logger.debug("Sensors Data aquisition finished")
 
         return sensors_dict
+
+
+class SensorHubLogger(IntervalMeasurementLogger):
+    def __init__(
+        self,
+        measurement_config: config.MeasurementConfig,
+        influxdb_config: config.InfluxDBConfig,
+    ) -> None:
+        super().__init__(
+            measurement_config,
+            influxdb_config,
+        )
+
+        self.sensorhub = SensorHubConnector()
+
+    def get_measure(self) -> Dict:
+        return self.sensorhub.get_all_sensors()

@@ -1,7 +1,11 @@
 from abc import ABC, abstractmethod
+from datetime import datetime
 import logging
 import requests
-from datetime import datetime
+from typing import Dict
+
+from home_monitoring.measurement_logger import IntervalMeasurementLogger
+from home_monitoring import config
 
 
 class OpenweatherApi(ABC):
@@ -72,3 +76,23 @@ class CurrentWeatherApi(OpenweatherApi):
         super().__init__(api_key, logger=logger)
 
         self.query = self.raw_query.format(city, self.api_key)
+
+
+class OpenWeatherLogger(IntervalMeasurementLogger):
+    def __init__(
+        self,
+        measurement_config: config.MeasurementConfig,
+        influxdb_config: config.InfluxDBConfig,
+    ) -> None:
+        super().__init__(
+            measurement_config,
+            influxdb_config,
+        )
+
+        self.current_weather_api = CurrentWeatherApi(
+            self.measurement_config.parameters["city"],
+            self.measurement_config.parameters["api_key"],
+        )
+
+    def get_measure(self) -> Dict:
+        return self.current_weather_api.query_api()

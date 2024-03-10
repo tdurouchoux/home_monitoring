@@ -1,13 +1,13 @@
-from typing import Dict, List, Callable
-
 import atexit
-import time
-import reactivex as rx
+from datetime import datetime
 import logging
-
+from typing import Dict
 
 import influxdb_client as idb
 from influxdb_client.client.write_api import SYNCHRONOUS
+import reactivex as rx
+
+logger = logging.getLogger(__name__)
 
 
 class InfluxDBConnector:
@@ -19,7 +19,6 @@ class InfluxDBConnector:
         retention_policy="autogen",
         host="localhost",
         port=8086,
-        logger=logging,
     ) -> None:
         self.bucket = f"{database}/{retention_policy}"
         self.username = username
@@ -30,10 +29,9 @@ class InfluxDBConnector:
         self.client = None
         self.write_api = None
 
-        self.logger = logger
-
+    # TODO configure max_retries and batch_size
     def _connect(self, write_options: idb.WriteOptions = SYNCHRONOUS) -> None:
-        self.logger.info(
+        logger.info(
             f"Attempting connection to Influxdb database with url {self.url} ..."
         )
 
@@ -42,10 +40,10 @@ class InfluxDBConnector:
         )
         self.write_api = self.client.write_api(write_options=write_options)
 
-        self.logger.info("Successfully connected to Database")
+        logger.info("Successfully connected to Database")
 
     def close(self) -> None:
-        self.logger.info("Closing connection with Influxdb database.")
+        logger.info("Closing connection with Influxdb database.")
 
         self.write_api.close()
         self.client.close()
@@ -61,9 +59,9 @@ class InfluxDBConnector:
         time: int = None,
         measure_tags: Dict = None,
         time_precision: str = "ns",
-        batch_size: int = 1,
+        **write_options,
     ) -> None:
-        self.logger.debug("Writing measure into Influxdb database ...")
+        logger.debug("Writing measure into Influxdb database ...")
 
         point = idb.Point(measurement)
 
@@ -77,24 +75,26 @@ class InfluxDBConnector:
         for key, value in data.items():
             point.field(key, value)
 
-        print(point.to_line_protocol())
-
         try:
             if self.client is None:
-                self._connect(write_options=idb.WriteOptions(batch_size=batch_size))
+                self._connect(write_options=idb.WriteOptions(**write_options))
 
             self.write_api.write(bucket=self.bucket, record=point)
 
-            self.logger.debug("Successfully wrote datapoint into database.")
+            logger.debug("Successfully wrote datapoint into database.")
 
         except Exception as e:
-            self.logger.warning(f"Failed to write data point: {e}")
+            logger.warning(f"Failed to write data point with error: {e}")
             self.client = None
 
     def write_observable(
-        self, measurement: str, measures_obs: rx.Observable, measure_tags: Dict = None
+        self,
+        measurement: str,
+        measures_obs: rx.Observable,
+        measure_tags: Dict = None,
+        **write_options,
     ) -> None:
-        self.logger.info("Setting up observable ...")
+        logger.info("Setting up observable ...")
 
         measure_info = {"measurement": measurement}
 
@@ -102,7 +102,7 @@ class InfluxDBConnector:
             measure_info["tags"] = measure_tags
 
         def format_measures(measures: Dict) -> Dict:
-            measure = {"fields": measures}
+            measure = {"fields": measures, "time": datetime.utcnow()}
             measure.update(measure_info)
             return measure
 
@@ -111,10 +111,10 @@ class InfluxDBConnector:
         if self.client is not None:
             self.close()
 
-        self._connect(write_options=idb.WriteOptions(batch_size=1))
+        self._connect(write_options=idb.WriteOptions(**write_options))
 
         self.write_api.write(bucket=self.bucket, record=measures_obs)
 
         atexit.register(self.close)
 
-        self.logger.info("Observable setted up.")
+        logger.info("Observable setted up.")
