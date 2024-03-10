@@ -54,7 +54,7 @@ class MeasurementLogger(ABC):
     def start_monitoring(self) -> None:
         self.handle_errors_observable()
 
-        logger.info("Launching %s measures ...", self.measurement_name)
+        logger.info("Launching %s measures ...", self.measurement_config.name)
 
         self.influxdb_connector.write_observable(
             self.measurement_config.name,

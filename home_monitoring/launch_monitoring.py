@@ -1,24 +1,28 @@
 import os
 import logging
+from pathlib import Path
 import time
 from typing import Dict
 
 import click
+from dotenv import load_dotenv
 from reactivex.scheduler import ThreadPoolScheduler
 
 from home_monitoring.measurements import MEASUREMENTS
 from home_monitoring import config
 
+load_dotenv()
+
 
 @click.command()
 @click.argument("config_directory")
 def main(config_directory: str) -> None:
-    logger_config, monitoring_config = config.load_config(config_directory)
+    logger_config, monitoring_config = config.load_config(Path(config_directory))
     influxdb_config = monitoring_config.Influxdb
     measurements_config = monitoring_config.measurements
 
     logging.config.dictConfig(logger_config)
-    logger = logger.getLogger("main")
+    logger = logging.getLogger("main")
 
     logger.info("Starting monitoring:")
     logger.info(

@@ -43,4 +43,4 @@ class BME680Logger(IntervalMeasurementLogger):
             math.log(measure["gas_resistance"]) + 0.04 * measure["humidity"], 1
         )
 
-        return {key: value for key, value in data.items() if key in LOG_KEYS}
+        return {key: value for key, value in measure.items() if key in LOG_KEYS}

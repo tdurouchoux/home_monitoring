@@ -1,4 +1,7 @@
 
+# Env variables
+.env
+
 # Zed dev files
 pyrightconfig.json
 

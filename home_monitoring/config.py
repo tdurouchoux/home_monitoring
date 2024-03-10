@@ -39,7 +39,9 @@ class MeasurementConfig:
 @dataclass
 class MonitoringConfig:
     Influxdb: InfluxDBConfig = field(default_factory=InfluxDBConfig)
-    measurements: List[MeasurementConfig] = field(default_factory=[MeasurementConfig])
+    measurements: List[MeasurementConfig] = field(
+        default_factory=lambda: [MeasurementConfig()]
+    )
 
 
 def load_config(config_directory: Path) -> Tuple[Dict, MonitoringConfig]:
