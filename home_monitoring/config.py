@@ -20,10 +20,12 @@ class InfluxDBConfig:
     port: int = 8086
 
 
+@dataclass
 class WriteConfiguration:
     batch_size: int = 1
     max_retries: int = 2
-    retries_interval: int = 400
+    retry_interval: int = 400
+    flush_interval: int = 1_000_000
 
 
 @dataclass
@@ -33,12 +35,12 @@ class MeasurementConfig:
     write_options: WriteConfiguration = field(default_factory=WriteConfiguration)
     nb_retry_measure: int = 3
     period: Optional[int] = None
-    parameters: Dict[str, Union[str, int]] = MISSING
+    parameters: Optional[Dict[str, Union[str, int]]] = None
 
 
 @dataclass
 class MonitoringConfig:
-    Influxdb: InfluxDBConfig = field(default_factory=InfluxDBConfig)
+    influxdb: InfluxDBConfig = field(default_factory=InfluxDBConfig)
     measurements: List[MeasurementConfig] = field(
         default_factory=lambda: [MeasurementConfig()]
     )

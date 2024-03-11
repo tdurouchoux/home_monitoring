@@ -70,7 +70,7 @@ class IntervalMeasurementLogger(MeasurementLogger):
 
     def create_observable(self, scheduler):
         logger.info(
-            "Creating time observable for measurement %s"
+            "Creating time observable for measurement %s "
             "taking measurement every %s seconds.",
             self.measurement_config.name,
             self.measurement_config.period,

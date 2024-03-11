@@ -1,20 +1,20 @@
 version: 1
 disable_existing_loggers: False
 formatters:
-  rich_formatter:
-    class: rich.logging.RichHandler
-    format: "{time} - {message}"
+  file_formatter:
+    format: '%(asctime)s %(name)s [%(levelname)s] - %(message)s'
+    datefmt: '%Y-%m-%d %H:%M:%S'
 handlers:
   console_handler:
-    class: logging.StreamHandler
+    class: rich.logging.RichHandler
     level: INFO
-    formatter: rich_formatter
-    stream: ext://sys.stdout
+    rich_tracebacks: True
   file_handler:
     class: logging.FileHandler
     level: INFO
-    formatter: rich_formatter
-    filename: mylog.log
+    formatter: file_formatter
+    filename: log/home_monitoring.log
+    mode: a
 root:
   level: INFO
   handlers: [console_handler, file_handler]

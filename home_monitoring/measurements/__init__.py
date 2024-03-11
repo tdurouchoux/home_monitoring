@@ -1,4 +1,4 @@
-from typing import
+from typing import Dict
 
 from home_monitoring.measurement_logger import MeasurementLogger
 

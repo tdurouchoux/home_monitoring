@@ -1,5 +1,6 @@
 import os
 import logging
+import logging.config
 from pathlib import Path
 import time
 from typing import Dict
@@ -18,7 +19,7 @@ load_dotenv()
 @click.argument("config_directory")
 def main(config_directory: str) -> None:
     logger_config, monitoring_config = config.load_config(Path(config_directory))
-    influxdb_config = monitoring_config.Influxdb
+    influxdb_config = monitoring_config.influxdb
     measurements_config = monitoring_config.measurements
 
     logging.config.dictConfig(logger_config)
