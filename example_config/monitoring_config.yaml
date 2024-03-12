@@ -1,0 +1,18 @@
+influxdb:
+  database: _
+  username: _
+  password: ${oc.env:INFLUXDB_PASSWORD}
+  host: _
+  port: _
+measurements:
+  - implement: bme280
+    name: bme280
+    write_options:
+      batch_size: 5
+    period: 5
+  - implement: openweather
+    name: openweather
+    period: 30
+    parameters:
+      city: "Paris, France"
+      api_key: ${oc.env:OPENWEATHER_API_KEY}

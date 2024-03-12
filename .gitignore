@@ -1,3 +1,10 @@
+
+# Env variables
+.env
+
+# Zed dev files
+pyrightconfig.json
+
 # scripts files
 home_monitoring.service
 home_monitoring.sh
