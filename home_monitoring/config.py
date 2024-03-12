@@ -35,7 +35,7 @@ class MeasurementConfig:
     write_options: WriteConfiguration = field(default_factory=WriteConfiguration)
     nb_retry_measure: int = 3
     period: Optional[int] = None
-    parameters: Optional[Dict[str, Union[str, int]]] = None
+    parameters: Optional[Dict[str, Union[str, int, bool]]] = None
 
 
 @dataclass
