@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "home-monitoring"
-version = "0.1.0"
+version = "1.0.0"
 description = "Home sensors logging"
 authors = ["tdurouchoux <thibault.durouchoux@gmail.com>"]
 readme = "README.md"
