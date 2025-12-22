@@ -1,52 +1,47 @@
+import logging
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
-import logging
-from typing import Dict, List, Union, Tuple, Optional
+from typing import Dict, List, Optional, Tuple, Union
 
-from omegaconf import OmegaConf, MISSING
 import yaml
+from omegaconf import MISSING, OmegaConf
 
 LOGGING_CONFIG_FILE = "logging_config.yaml"
 MONITORING_CONFIG_FILE = "monitoring_config.yaml"
 
 
 @dataclass
-class InfluxDBConfig:
-    database: str = MISSING
-    username: str = MISSING
-    password: str = MISSING
-    host: str = "localhost"
-    port: int = 8086
-
-
-@dataclass
-class WriteConfiguration:
-    batch_size: int = 1
-    max_retries: int = 2
-    retry_interval: int = 400
-    flush_interval: int = 1_000_000
+class MQTTConfig:
+    broker: str = MISSING
+    port: int = 1883
+    username: Optional[str] = None
+    password: Optional[str] = None
+    base_topic: str = "homeassistant"
+    # use_tls: bool = False
+    # ca_certs: Optional[str] = None
 
 
 @dataclass
 class MeasurementConfig:
-    implement: str = MISSING
+    type: str = MISSING
     name: str = MISSING
-    write_options: WriteConfiguration = field(default_factory=WriteConfiguration)
+    location: str = MISSING
     nb_retry_measure: int = 3
     period: Optional[int] = None
-    parameters: Optional[Dict[str, Union[str, int, bool]]] = None
+    qos: int = 1
+    parameters: Optional[dict[str, str | int | bool]] = None
 
 
 @dataclass
 class MonitoringConfig:
-    influxdb: InfluxDBConfig = field(default_factory=InfluxDBConfig)
-    measurements: List[MeasurementConfig] = field(
+    mqtt: MQTTConfig = field(default_factory=MQTTConfig)
+    measurements: list[MeasurementConfig] = field(
         default_factory=lambda: [MeasurementConfig()]
     )
 
 
-def load_config(config_directory: Path) -> Tuple[Dict, MonitoringConfig]:
+def load_config(config_directory: Path) -> tuple[dict, MonitoringConfig]:
     # Load logging config
     with open(config_directory / LOGGING_CONFIG_FILE, "r") as file:
         logging_config = yaml.safe_load(file.read())

@@ -1,35 +1,34 @@
+import atexit
+import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
-import logging
-from typing_extensions import Dict
+from typing import Any
 
 import reactivex as rx
 
 from home_monitoring import config
-from home_monitoring.influxdb_connector import InfluxDBConnector
+from home_monitoring.mqtt_connector import MQTTConnector
 
 logger = logging.getLogger(__name__)
 
 
 @dataclass
-class MeasurementLogger(ABC):
+class SensorPublisher(ABC):
     def __init__(
         self,
         measurement_config: config.MeasurementConfig,
-        influxdb_config: config.InfluxDBConfig,
+        mqtt_config: config.MQTTConfig,
     ) -> None:
         self.measurement_config = measurement_config
-
-        self.influxdb_connector = InfluxDBConnector(**influxdb_config.__dict__)
-
+        self.mqtt_connector = MQTTConnector(mqtt_config)
         self.measure_obs: rx.Observable = None
 
     @abstractmethod
     def create_observable(self, scheduler) -> None:
         pass
 
-    def handle_errors_observable(self) -> None:
+    def start_monitoring(self) -> None:
         def catch_error(e, observable):
             logger.error(
                 "Observable %s stopped after %s try.",
@@ -39,7 +38,20 @@ class MeasurementLogger(ABC):
 
             return rx.empty()
 
-        self.measure_obs = self.measure_obs.pipe(
+        # Register cleanup on exit
+        atexit.register(self.mqtt_connector.disconnect)
+
+        logger.info("Launching %s measures ...", self.measurement_config.name)
+
+        publish_pipeline = self.mqtt_connector.setup_publishing(
+            self.measurement_config.name,
+            self.measurement_config.location,
+            self.measure_obs,
+            qos=self.measurement_config.qos,
+            retain=self.measurement_config.retain,
+        )
+
+        publish_pipeline = publish_pipeline.pipe(
             rx.operators.do_action(
                 on_error=lambda e: logger.warning(
                     "Observable %s got following error : %s",
@@ -51,21 +63,16 @@ class MeasurementLogger(ABC):
             rx.operators.catch(handler=catch_error),
         )
 
-    def start_monitoring(self) -> None:
-        self.handle_errors_observable()
-
-        logger.info("Launching %s measures ...", self.measurement_config.name)
-
-        self.influxdb_connector.write_observable(
-            self.measurement_config.name,
-            self.measure_obs,
-            **self.measurement_config.write_options.__dict__,
+        publish_pipeline.subscribe(
+            on_error=lambda e: logger.error(
+                f"Fatal error for {self.measurement_config.name}: {e}"
+            )
         )
 
 
-class IntervalMeasurementLogger(MeasurementLogger):
+class IntervalSensorPublisher(SensorPublisher):
     @abstractmethod
-    def get_measure(self) -> Dict:
+    def get_measure(self) -> Any:
         pass
 
     def create_observable(self, scheduler):

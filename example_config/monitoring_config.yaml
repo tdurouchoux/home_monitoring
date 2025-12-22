@@ -1,18 +1,40 @@
-influxdb:
-  database: _
-  username: _
-  password: ${oc.env:INFLUXDB_PASSWORD}
-  host: _
-  port: _
+mqtt:
+  broker: localhost
+  port: 1883
+  username: ${oc.env:MQTT_USERNAME}
+  password: ${oc.env:MQTT_PASSWORD}
+  base_topic: "home/monitoring"
+  qos: 1
+  retain: false
+  payload_format: "json"
+
 measurements:
+  - implement: system_usage
+    name: system_usage
+    write_options:
+      batch_size: 1
+    period: 10
+    parameters:
+      cpu: true
+      ram: true
+      memory: true
+      temperature: true
+
   - implement: bme280
     name: bme280
     write_options:
       batch_size: 5
     period: 5
-  - implement: openweather
-    name: openweather
-    period: 30
+
+  - implement: bme680
+    name: bme680
+    write_options:
+      batch_size: 5
+    period: 5
+
+  - implement: teleinfo
+    name: teleinfo
+    write_options:
+      batch_size: 1
     parameters:
-      city: "Paris, France"
-      api_key: ${oc.env:OPENWEATHER_API_KEY}
+      serial_port: "/dev/ttyAMA0"
