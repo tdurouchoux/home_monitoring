@@ -15,8 +15,6 @@ from tenacity import (
 
 from home_monitoring.config import MQTTConfig
 
-logger = logging.getLogger(__name__)
-
 
 class MQTTConnector:
     """
@@ -28,8 +26,9 @@ class MQTTConnector:
 
     def __init__(self, mqtt_config: MQTTConfig, client_id: str) -> None:
         self.mqtt_config = mqtt_config
-
         self.client_id = client_id
+
+        self.logger = logging.getLogger(self.client_id)
         # Connection state
         self.client: Optional[mqtt.Client] = None
         self.connected = False
@@ -38,25 +37,27 @@ class MQTTConnector:
         """Callback when connection is established"""
         if rc == 0:
             self.connected = True
-            logger.info(
+            self.logger.info(
                 f"Successfully connected to MQTT broker at {self.mqtt_config.broker}:{self.mqtt_config.port}"
             )
         else:
             self.connected = False
-            logger.error(f"Failed to connect to MQTT broker: {rc.name}")
+            self.logger.error(f"Failed to connect to MQTT broker: {rc.name}")
             raise ConnectionError(rc.name)
 
     def _on_disconnect(self, client, userdata, rc):
         """Callback when disconnected"""
         self.connected = False
         if rc != 0:
-            logger.warning(f"Unexpected disconnection from MQTT broker (code {rc})")
+            self.logger.warning(
+                f"Unexpected disconnection from MQTT broker (code {rc})"
+            )
         else:
-            logger.info("Disconnected from MQTT broker")
+            self.logger.info("Disconnected from MQTT broker")
 
     def _on_publish(self, client, userdata, mid):
         """Callback when message is published"""
-        logger.debug(f"Message {mid} published successfully")
+        self.logger.debug(f"Message {mid} published successfully")
 
     @retry(
         stop=stop_after_attempt(5),
@@ -74,7 +75,7 @@ class MQTTConnector:
         - Wait time: 1s, 2s, 4s, 8s, 16s, 32s, 64s, 120s, 120s, 120s
         - Only retries on connection errors
         """
-        logger.info(
+        self.logger.info(
             f"Attempting connection to MQTT broker at {self.mqtt_config.broker}:{self.mqtt_config.port}..."
         )
 
@@ -114,7 +115,7 @@ class MQTTConnector:
     def disconnect(self) -> None:
         """Disconnect from MQTT broker"""
         if self.client is not None:
-            logger.info("Disconnecting from MQTT broker...")
+            self.logger.info("Disconnecting from MQTT broker...")
             self.client.loop_stop()
             self.client.disconnect()
             self.client = None
@@ -132,7 +133,7 @@ class MQTTConnector:
             Serialized payload as bytes
         """
 
-        logger.debug(f"Serializing payload: {data}")
+        self.logger.debug(f"Serializing payload: {data}")
 
         if data is None:
             return None
@@ -165,7 +166,7 @@ class MQTTConnector:
             retain: Retain flag
         """
 
-        logger.debug(f"Publishing message to MQTT broker for {topic}...")
+        self.logger.debug(f"Publishing message to MQTT broker for {topic}...")
 
         # Ensure connected
         if self.client is None or not self.connected:
@@ -180,13 +181,13 @@ class MQTTConnector:
         # ? Create publish error
 
         except Exception as e:
-            logger.warning(f"Failed to publish data point with error: {e}")
+            self.logger.warning(f"Failed to publish data point with error: {e}")
             self.connected = False
             raise e
             # Check if publish was successful
 
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
-            logger.error(
+            self.logger.error(
                 "Failed to publish message to %s, rc=%s", topic, result.rc.name
             )
             raise Exception(
@@ -214,7 +215,10 @@ class MQTTConnector:
         Returns:
             Observable with serialization and publishing operations added
         """
-        logger.info(f"Setting up observable for {sensor_name} at {sensor_location}...")
+        self.logger.info(
+            f"Setting up observable for {sensor_name} at {sensor_location}..."
+        )
+        self.logger.info(f"Setting up observable for {sensor_name} at {sensor_location}...")
 
         # Build topic
         topic = f"{self.mqtt_config.base_topic}/{sensor_location}/{sensor_name}"
