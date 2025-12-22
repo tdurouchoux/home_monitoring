@@ -6,7 +6,6 @@ import paho.mqtt.client as mqtt
 import reactivex as rx
 from reactivex import operators as ops
 from tenacity import (
-    before_sleep_log,
     retry,
     retry_if_exception_type,
     stop_after_attempt,
@@ -27,8 +26,7 @@ class MQTTConnector:
     def __init__(self, mqtt_config: MQTTConfig, client_id: str) -> None:
         self.mqtt_config = mqtt_config
         self.client_id = client_id
-
-        self.logger = logging.getLogger(self.client_id)
+        self.logger = logging.getLogger(client_id)
         # Connection state
         self.client: Optional[mqtt.Client] = None
         self.connected = False
@@ -63,7 +61,7 @@ class MQTTConnector:
         stop=stop_after_attempt(5),
         wait=wait_exponential(multiplier=1, min=1, max=120),
         retry=retry_if_exception_type((ConnectionError, OSError, TimeoutError)),
-        before_sleep=before_sleep_log(logger, logging.WARNING),
+        # before_sleep=before_sleep_log(self.logger, logging.WARNING),
         reraise=True,
     )
     def connect(self) -> None:
@@ -133,8 +131,6 @@ class MQTTConnector:
             Serialized payload as bytes
         """
 
-        self.logger.debug(f"Serializing payload: {data}")
-
         if data is None:
             return None
 
@@ -166,7 +162,7 @@ class MQTTConnector:
             retain: Retain flag
         """
 
-        self.logger.debug(f"Publishing message to MQTT broker for {topic}...")
+        self.logger.debug(f"Publishing message {data} to MQTT broker for {topic}...")
 
         # Ensure connected
         if self.client is None or not self.connected:
@@ -218,7 +214,6 @@ class MQTTConnector:
         self.logger.info(
             f"Setting up observable for {sensor_name} at {sensor_location}..."
         )
-        self.logger.info(f"Setting up observable for {sensor_name} at {sensor_location}...")
 
         # Build topic
         topic = f"{self.mqtt_config.base_topic}/{sensor_location}/{sensor_name}"
@@ -231,7 +226,7 @@ class MQTTConnector:
         publish_pipeline = measures_obs.pipe(
             # Step 1: Serialize data to bytes
             ops.map(self.serialize_payload),
-            # Step 2: Publish to MQTT (side effect)
+            # Step 2: Publish to MQTT (side effect),
             ops.do_action(
                 on_next=lambda data: self.publish_message(data, topic, qos, retain)
             ),

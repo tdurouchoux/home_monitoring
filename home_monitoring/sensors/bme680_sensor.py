@@ -42,7 +42,7 @@ class BME680Publisher(IntervalSensorPublisher):
 
         aqi = round(
             math.log(self.sensor.data.gas_resistance)
-            + 0.04 * self.sensor.data.gas_resistance,
+            + 0.04 * self.sensor.data.humidity,
             1,
         )
 
