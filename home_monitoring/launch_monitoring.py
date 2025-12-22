@@ -20,7 +20,7 @@ load_dotenv()
 def main(config_directory: str) -> None:
     logger_config, monitoring_config = config.load_config(Path(config_directory))
     mqtt_config = monitoring_config.mqtt
-    measurements_config = monitoring_config.measurements
+    sensors_config = monitoring_config.sensors
 
     logging.config.dictConfig(logger_config)
     logger = logging.getLogger("main")
@@ -32,18 +32,17 @@ def main(config_directory: str) -> None:
             "broker": mqtt_config.broker,
             "port": mqtt_config.port,
             "base_topic": mqtt_config.base_topic,
-            "qos": mqtt_config.qos,
         },
     )
 
     logger.info("Setting up measurements ... ")
 
-    scheduler = ThreadPoolScheduler(len(measurements_config))
+    scheduler = ThreadPoolScheduler(len(sensors_config))
 
-    for measurement in measurements_config:
-        logger.info("Setting up measurement %s ...", measurement.name)
+    for sensor in sensors_config:
+        logger.info("Setting up sensor %s ...", sensor.name)
 
-        sensor_publisher = SENSORS[measurement.implement](measurement, mqtt_config)
+        sensor_publisher = SENSORS[sensor.type](sensor, mqtt_config)
         sensor_publisher.create_observable(scheduler)
         sensor_publisher.start_monitoring()
 

@@ -4,6 +4,7 @@ from typing import Any, Optional
 
 import paho.mqtt.client as mqtt
 import reactivex as rx
+from reactivex import operators as ops
 from tenacity import (
     before_sleep_log,
     retry,
@@ -25,11 +26,10 @@ class MQTTConnector:
     and automatic reconnection with exponential backoff using tenacity.
     """
 
-    def __init__(self, mqtt_config: MQTTConfig, topic: str) -> None:
+    def __init__(self, mqtt_config: MQTTConfig, client_id: str) -> None:
         self.mqtt_config = mqtt_config
 
-        self.topic = topic
-
+        self.client_id = client_id
         # Connection state
         self.client: Optional[mqtt.Client] = None
         self.connected = False
@@ -39,7 +39,7 @@ class MQTTConnector:
         if rc == 0:
             self.connected = True
             logger.info(
-                f"Successfully connected to MQTT broker at {self.broker}:{self.port}"
+                f"Successfully connected to MQTT broker at {self.mqtt_config.broker}:{self.mqtt_config.port}"
             )
         else:
             self.connected = False
@@ -75,13 +75,13 @@ class MQTTConnector:
         - Only retries on connection errors
         """
         logger.info(
-            f"Attempting connection to MQTT broker at {self.broker}:{self.port}..."
+            f"Attempting connection to MQTT broker at {self.mqtt_config.broker}:{self.mqtt_config.port}..."
         )
 
+        # ! MISSING client id
+
         # Create MQTT client (using v3.1.1 for better compatibility)
-        self.client = mqtt.Client(
-            client_id=self.mqtt_config.client_id, protocol=mqtt.MQTTv311
-        )
+        self.client = mqtt.Client(client_id=self.client_id, protocol=mqtt.MQTTv311)
 
         # Set callbacks
         self.client.on_connect = self._on_connect
@@ -89,7 +89,10 @@ class MQTTConnector:
         self.client.on_publish = self._on_publish
 
         # Set authentication if provided
-        if self.username and self.password:
+        if (
+            self.mqtt_config.username is not None
+            and self.mqtt_config.password is not None
+        ):
             self.client.username_pw_set(
                 self.mqtt_config.username, self.mqtt_config.password
             )
@@ -128,6 +131,9 @@ class MQTTConnector:
         Returns:
             Serialized payload as bytes
         """
+
+        logger.debug(f"Serializing payload: {data}")
+
         if data is None:
             return None
 
@@ -220,10 +226,10 @@ class MQTTConnector:
         # Build the reactive pipeline
         publish_pipeline = measures_obs.pipe(
             # Step 1: Serialize data to bytes
-            rx.operators.map(self.serialize_payload),
+            ops.map(self.serialize_payload),
             # Step 2: Publish to MQTT (side effect)
-            rx.operators.do_action(
-                on_next=lambda data: self._publish_to_mqtt(data, topic, qos, retain)
+            ops.do_action(
+                on_next=lambda data: self.publish_message(data, topic, qos, retain)
             ),
         )
 

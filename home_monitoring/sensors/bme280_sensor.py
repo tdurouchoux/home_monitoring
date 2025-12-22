@@ -2,7 +2,7 @@ from bme280 import BME280
 from smbus import SMBus
 
 from home_monitoring import config
-from home_monitoring.measurement_logger import IntervalSensorPublisher
+from home_monitoring.sensor_publisher import IntervalSensorPublisher
 
 LOG_KEYS = [
     "temperature",
@@ -14,11 +14,11 @@ LOG_KEYS = [
 class BME280Publisher(IntervalSensorPublisher):
     def __init__(
         self,
-        measurement_config: config.MeasurementConfig,
+        sensor_config: config.SensorConfig,
         mqtt_config: config.MQTTConfig,
     ) -> None:
         super().__init__(
-            measurement_config,
+            sensor_config,
             mqtt_config,
         )
 

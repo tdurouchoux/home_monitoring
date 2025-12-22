@@ -4,9 +4,7 @@ import math
 import bme680
 
 from home_monitoring import config
-from home_monitoring.measurement_logger import IntervalSensorPublisher
-
-LOG_KEYS = ["status", "heat_stable", "temperature", "pressure", "humidity", "aqi"]
+from home_monitoring.sensor_publisher import IntervalSensorPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -14,11 +12,11 @@ logger = logging.getLogger(__name__)
 class BME680Publisher(IntervalSensorPublisher):
     def __init__(
         self,
-        measurement_config: config.MeasurementConfig,
+        sensor_config: config.SensorConfig,
         mqtt_config: config.MQTTConfig,
     ) -> None:
         super().__init__(
-            measurement_config,
+            sensor_config,
             mqtt_config,
         )
 
@@ -39,11 +37,18 @@ class BME680Publisher(IntervalSensorPublisher):
     def get_measure(self) -> dict | None:
         self.sensor.get_sensor_data()
 
-        if not self.sensor.data.heat_stable():
-            logger.info("%s sensor is not yet ready", self.__qualname__)
+        if not self.sensor.data.heat_stable:
+            logger.info("%s sensor is not yet ready", self.sensor_config.name)
 
-        measure["aqi"] = round(
-            math.log(measure["gas_resistance"]) + 0.04 * measure["humidity"], 1
+        aqi = round(
+            math.log(self.sensor.data.gas_resistance)
+            + 0.04 * self.sensor.data.gas_resistance,
+            1,
         )
 
-        return {key: value for key, value in measure.items() if key in LOG_KEYS}
+        return {
+            "temperature": self.sensor.data.temperature,
+            "pressure": self.sensor.data.pressure,
+            "humidity": self.sensor.data.humidity,
+            "aqi": aqi,
+        }

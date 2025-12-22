@@ -1,8 +1,6 @@
-import logging
 from dataclasses import dataclass, field
-from enum import Enum
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Optional
 
 import yaml
 from omegaconf import MISSING, OmegaConf
@@ -23,22 +21,21 @@ class MQTTConfig:
 
 
 @dataclass
-class MeasurementConfig:
+class SensorConfig:
     type: str = MISSING
     name: str = MISSING
     location: str = MISSING
     nb_retry_measure: int = 3
     period: Optional[int] = None
     qos: int = 1
+    retain: bool = False
     parameters: Optional[dict[str, str | int | bool]] = None
 
 
 @dataclass
 class MonitoringConfig:
     mqtt: MQTTConfig = field(default_factory=MQTTConfig)
-    measurements: list[MeasurementConfig] = field(
-        default_factory=lambda: [MeasurementConfig()]
-    )
+    sensors: list[SensorConfig] = field(default_factory=lambda: [SensorConfig()])
 
 
 def load_config(config_directory: Path) -> tuple[dict, MonitoringConfig]:

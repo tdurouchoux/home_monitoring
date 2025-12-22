@@ -1,40 +1,41 @@
 mqtt:
-  broker: localhost
-  port: 1883
-  username: ${oc.env:MQTT_USERNAME}
-  password: ${oc.env:MQTT_PASSWORD}
-  base_topic: "home/monitoring"
-  qos: 1
-  retain: false
-  payload_format: "json"
+    broker: localhost
+    port: 1883
+    username: ${oc.env:MQTT_USERNAME}
+    password: ${oc.env:MQTT_PASSWORD}
+    base_topic: "homeassistant"
 
-measurements:
-  - implement: system_usage
-    name: system_usage
-    write_options:
-      batch_size: 1
-    period: 10
-    parameters:
-      cpu: true
-      ram: true
-      memory: true
-      temperature: true
+sensors:
+    - type: system_usage
+      name: system_usage
+      location: living_room
+      nb_retry_measure: 3
+      period: 10
+      qos: 1
+      parameters:
+          cpu: true
+          ram: true
+          memory: true
+          temperature: true
 
-  - implement: bme280
-    name: bme280
-    write_options:
-      batch_size: 5
-    period: 5
+    - type: bme280
+      name: bme280
+      location: bedroom
+      nb_retry_measure: 3
+      period: 5
+      qos: 1
 
-  - implement: bme680
-    name: bme680
-    write_options:
-      batch_size: 5
-    period: 5
+    - type: bme680
+      name: bme680
+      location: kitchen
+      nb_retry_measure: 3
+      period: 5
+      qos: 1
 
-  - implement: teleinfo
-    name: teleinfo
-    write_options:
-      batch_size: 1
-    parameters:
-      serial_port: "/dev/ttyAMA0"
+    - type: teleinfo
+      name: teleinfo
+      location: garage
+      nb_retry_measure: 3
+      qos: 1
+      parameters:
+          serial_port: "/dev/ttyAMA0"

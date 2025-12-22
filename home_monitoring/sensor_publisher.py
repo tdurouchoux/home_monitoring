@@ -6,6 +6,7 @@ from datetime import timedelta
 from typing import Any
 
 import reactivex as rx
+from reactivex import operators as ops
 
 from home_monitoring import config
 from home_monitoring.mqtt_connector import MQTTConnector
@@ -17,11 +18,13 @@ logger = logging.getLogger(__name__)
 class SensorPublisher(ABC):
     def __init__(
         self,
-        measurement_config: config.MeasurementConfig,
+        sensor_config: config.SensorConfig,
         mqtt_config: config.MQTTConfig,
     ) -> None:
-        self.measurement_config = measurement_config
-        self.mqtt_connector = MQTTConnector(mqtt_config)
+        self.sensor_config = sensor_config
+        self.mqtt_connector = MQTTConnector(
+            mqtt_config, client_id=f"{sensor_config.type}-{sensor_config.name}"
+        )
         self.measure_obs: rx.Observable = None
 
     @abstractmethod
@@ -32,8 +35,8 @@ class SensorPublisher(ABC):
         def catch_error(e, observable):
             logger.error(
                 "Observable %s stopped after %s try.",
-                self.measurement_config.name,
-                self.measurement_config.nb_retry_measure,
+                self.sensor_config.name,
+                self.sensor_config.nb_retry_measure,
             )
 
             return rx.empty()
@@ -41,31 +44,31 @@ class SensorPublisher(ABC):
         # Register cleanup on exit
         atexit.register(self.mqtt_connector.disconnect)
 
-        logger.info("Launching %s measures ...", self.measurement_config.name)
+        logger.info("Launching %s measures ...", self.sensor_config.name)
 
         publish_pipeline = self.mqtt_connector.setup_publishing(
-            self.measurement_config.name,
-            self.measurement_config.location,
+            self.sensor_config.name,
+            self.sensor_config.location,
             self.measure_obs,
-            qos=self.measurement_config.qos,
-            retain=self.measurement_config.retain,
+            qos=self.sensor_config.qos,
+            retain=self.sensor_config.retain,
         )
 
         publish_pipeline = publish_pipeline.pipe(
-            rx.operators.do_action(
+            ops.do_action(
                 on_error=lambda e: logger.warning(
                     "Observable %s got following error : %s",
-                    self.measurement_config.name,
+                    self.sensor_config.name,
                     e,
                 )
             ),
-            rx.operators.retry(self.measurement_config.nb_retry_measure),
-            rx.operators.catch(handler=catch_error),
+            ops.retry(self.sensor_config.nb_retry_measure),
+            ops.catch(handler=catch_error),
         )
 
         publish_pipeline.subscribe(
             on_error=lambda e: logger.error(
-                f"Fatal error for {self.measurement_config.name}: {e}"
+                f"Fatal error for {self.sensor_config.name}: {e}"
             )
         )
 
@@ -79,13 +82,13 @@ class IntervalSensorPublisher(SensorPublisher):
         logger.info(
             "Creating time observable for measurement %s "
             "taking measurement every %s seconds.",
-            self.measurement_config.name,
-            self.measurement_config.period,
+            self.sensor_config.name,
+            self.sensor_config.period,
         )
 
         self.measure_obs = rx.interval(
-            period=timedelta(seconds=self.measurement_config.period)
+            period=timedelta(seconds=self.sensor_config.period)
         ).pipe(
-            rx.operators.map(lambda _: self.get_measure()),
-            rx.operators.subscribe_on(scheduler),
+            ops.map(lambda _: self.get_measure()),
+            ops.subscribe_on(scheduler),
         )
