@@ -1,11 +1,11 @@
 import logging
-from typing import Dict
 
 import reactivex as rx
 import serial
+from reactivex import operators as ops
 
-from home_monitoring.measurement_logger import MeasurementLogger
 from home_monitoring import config
+from home_monitoring.sensor_publisher import SensorPublisher
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ class TeleinfoConnector:
     # }
 
     # clés téléinfo
-    LOG_KEYS = ["BASE", "IMAX", "HHPHC", "IINST", "PAPP"]
+    LOG_KEYS = ["BASE", "IINST", "PAPP"]
 
     # clés avec une valeur entière
     INT_MEASURE_KEYS = ["BASE", "IMAX", "IINST", "PAPP"]
@@ -110,22 +110,22 @@ class TeleinfoConnector:
                 line = ser.readline()
 
 
-class TeleinfoLogger(MeasurementLogger):
+class TeleinfoPublisher(SensorPublisher):
     def __init__(
         self,
-        measurement_config: config.MeasurementConfig,
-        influxdb_config: config.InfluxDBConfig,
+        sensor_config: config.SensorConfig,
+        mqtt_config: config.MQTTConfig,
     ) -> None:
         super().__init__(
-            measurement_config,
-            influxdb_config,
+            sensor_config,
+            mqtt_config,
         )
 
         self.teleinfo_connector = TeleinfoConnector(
-            self.measurement_config.parameters["serial_port"]
+            self.sensor_config.parameters["serial_port"]
         )
 
     def create_observable(self, scheduler) -> None:
         self.measure_obs = rx.create(
             lambda observer, _: self.teleinfo_connector.log_teleinfo_serial(observer)
-        ).pipe(rx.operators.subscribe_on(scheduler))
+        ).pipe(ops.observe_on(scheduler), ops.subscribe_on(scheduler))

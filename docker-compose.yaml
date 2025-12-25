@@ -1,0 +1,12 @@
+services:
+    homemonitoring:
+        image: test_home_monitoring
+        container_name: homemonitoring
+        restart: unless-stopped
+        volumes:
+            - ./config:/app/config
+            - ./log:/app/log
+        devices:
+            - /dev/i2c-1
+            - /dev/ttyS0
+        network_mode: host

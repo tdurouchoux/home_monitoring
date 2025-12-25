@@ -1,16 +1,16 @@
-import os
 import logging
 import logging.config
-from pathlib import Path
+import os
 import time
+from pathlib import Path
 from typing import Dict
 
 import click
 from dotenv import load_dotenv
 from reactivex.scheduler import ThreadPoolScheduler
 
-from home_monitoring.measurements import MEASUREMENTS
 from home_monitoring import config
+from home_monitoring.sensors import SENSORS
 
 load_dotenv()
 
@@ -19,34 +19,32 @@ load_dotenv()
 @click.argument("config_directory")
 def main(config_directory: str) -> None:
     logger_config, monitoring_config = config.load_config(Path(config_directory))
-    influxdb_config = monitoring_config.influxdb
-    measurements_config = monitoring_config.measurements
+    mqtt_config = monitoring_config.mqtt
+    sensors_config = monitoring_config.sensors
 
     logging.config.dictConfig(logger_config)
     logger = logging.getLogger("main")
 
     logger.info("Starting monitoring:")
     logger.info(
-        "InfluxDB configuration : %s",
+        "MQTT configuration: %s",
         {
-            "database": influxdb_config.database,
-            "host": influxdb_config.host,
-            "port": influxdb_config.host,
+            "broker": mqtt_config.broker,
+            "port": mqtt_config.port,
+            "base_topic": mqtt_config.base_topic,
         },
     )
 
     logger.info("Setting up measurements ... ")
 
-    scheduler = ThreadPoolScheduler(len(measurements_config))
+    scheduler = ThreadPoolScheduler(len(sensors_config))
 
-    for measurement in measurements_config:
-        logger.info("Setting up measurement %s ...", measurement.name)
+    for sensor in sensors_config:
+        logger.info("Setting up sensor %s ...", sensor.name)
 
-        measurement_logger = MEASUREMENTS[measurement.implement](
-            measurement, influxdb_config
-        )
-        measurement_logger.create_observable(scheduler)
-        measurement_logger.start_monitoring()
+        sensor_publisher = SENSORS[sensor.type](sensor, mqtt_config)
+        sensor_publisher.create_observable(scheduler)
+        sensor_publisher.start_monitoring()
 
     while True:
         time.sleep(10_000)
