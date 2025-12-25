@@ -16,6 +16,7 @@ dependencies = [
     "python-dotenv>=1.0.1,<2",
     "tenacity>=9.1.2",
     "paho-mqtt>=2.1.0",
+    "smbus>=1.1.post2",
 ]
 
 [project.scripts]
@@ -25,8 +26,8 @@ launch_monitoring = "home_monitoring.launch_monitoring:main"
 teleinfo = ["pyserial>=3.5,<4"]
 system_usage = ["psutil>=5.9.4,<6"]
 bme_sensor = [
-    "pimoroni-bme280>=0.1.1,<0.2",
-    "bme680>=1.1.1,<2",
+    "bme680>=2.0.0",
+    "pimoroni-bme280>=1.0.0",
 ]
 
 [tool.uv]

@@ -10,8 +10,8 @@ home_monitoring.service
 home_monitoring.sh
 
 #Config and log directory
-log/
-config/
+log/*
+config/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

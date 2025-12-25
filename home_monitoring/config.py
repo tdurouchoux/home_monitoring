@@ -6,7 +6,6 @@ import yaml
 from omegaconf import MISSING, OmegaConf
 
 LOGGING_CONFIG_FILE = "logging_config.yaml"
-MONITORING_CONFIG_FILE = "monitoring_config.yaml"
 
 
 @dataclass
@@ -26,9 +25,11 @@ class SensorConfig:
     name: str = MISSING
     location: str = MISSING
     nb_retry_measure: int = 3
-    period: Optional[int] = None
     qos: int = 1
     retain: bool = False
+    period: Optional[int] = None
+    buffer_time: Optional[int] = None
+    buffer_op: Optional[str] = None
     parameters: Optional[dict[str, str | int | bool]] = None
 
 
@@ -38,13 +39,13 @@ class MonitoringConfig:
     sensors: list[SensorConfig] = field(default_factory=lambda: [SensorConfig()])
 
 
-def load_config(config_directory: Path) -> tuple[dict, MonitoringConfig]:
+def load_config(config_file: Path) -> tuple[dict, MonitoringConfig]:
     # Load logging config
-    with open(config_directory / LOGGING_CONFIG_FILE, "r") as file:
+    with open(LOGGING_CONFIG_FILE, "r") as file:
         logging_config = yaml.safe_load(file.read())
 
     default_config = OmegaConf.structured(MonitoringConfig)
-    file_config = OmegaConf.load(config_directory / MONITORING_CONFIG_FILE)
+    file_config = OmegaConf.load(config_file)
     merged_config = OmegaConf.merge(default_config, file_config)
 
     monitoring_config = OmegaConf.to_object(merged_config)

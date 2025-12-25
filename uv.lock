@@ -10,14 +10,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d
 
 [[package]]
 name = "bme680"
-version = "1.1.1"
+version = "2.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "smbus" },
+    { name = "smbus2" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/e5/b4/5576f6f4fe94b4b518ddf40e24d29ba00117ab9b92fcb90e4c23e16eff4f/bme680-1.1.1.tar.gz", hash = "sha256:287f9329d6befb88e091186502df87949ed796d5615419aa0ce92920752c852f", size = 11876, upload-time = "2021-05-11T10:16:55.516Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4b/92/8ac453cac43f019387259a01e0f4e13c5917cc0925f077a32e308522a9ca/bme680-2.0.0.tar.gz", hash = "sha256:7395afd9bc95fc3d643cc873ad2f5c27d3c2d18ccf4771505124e0e2042c0d74", size = 80399, upload-time = "2024-05-10T10:51:39.584Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/d1/ddb7aa5ca15599d8ccbf5591469006d493ee038f688b9353594ec253fc84/bme680-1.1.1-py3-none-any.whl", hash = "sha256:314023ef62b96aa93039a0aedb5fc2015f772cd25fc4333bec9f6b9304e9fbdf", size = 11456, upload-time = "2021-05-11T10:16:54.238Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/19/8c926497c8be9fc65bbd09d3ab44cb5f78219defc5dbb57d606dd5e39444/bme680-2.0.0-py3-none-any.whl", hash = "sha256:1802bd5ba98354ebb9318185051c913e1a3c2f06771e8f91eb40e5838795e66e", size = 14360, upload-time = "2024-05-10T10:51:37.678Z" },
 ]
 
 [[package]]
@@ -63,6 +63,7 @@ dependencies = [
     { name = "pyyaml" },
     { name = "reactivex" },
     { name = "rich" },
+    { name = "smbus" },
     { name = "tenacity" },
     { name = "tqdm" },
 ]
@@ -89,14 +90,15 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0,<7" },
     { name = "reactivex", specifier = ">=4.0.4,<5" },
     { name = "rich", specifier = ">=13.7.1,<14" },
+    { name = "smbus", specifier = ">=1.1.post2" },
     { name = "tenacity", specifier = ">=9.1.2" },
     { name = "tqdm", specifier = ">=4.65.0,<5" },
 ]
 
 [package.metadata.requires-dev]
 bme-sensor = [
-    { name = "bme680", specifier = ">=1.1.1,<2" },
-    { name = "pimoroni-bme280", specifier = ">=0.1.1,<0.2" },
+    { name = "bme680", specifier = ">=2.0.0" },
+    { name = "pimoroni-bme280", specifier = ">=1.0.0" },
 ]
 system-usage = [{ name = "psutil", specifier = ">=5.9.4,<6" }]
 teleinfo = [{ name = "pyserial", specifier = ">=3.5,<4" }]
@@ -174,14 +176,14 @@ wheels = [
 
 [[package]]
 name = "pimoroni-bme280"
-version = "0.1.1"
+version = "1.0.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "i2cdevice" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/dd/1a/165af07b77a70d37bf0b6946f7d857d8f688f130bbbddf0611af4fe5f282/pimoroni-bme280-0.1.1.tar.gz", hash = "sha256:2b765bef20d6ca7969fa70119bdf04d9cb81b57587fefa875e3bef4f8ce63f12", size = 5536, upload-time = "2020-11-02T10:32:14.34Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/69/6e/9b34cf9149e23fdd521440ae6a2786e77d542a4ccefef8bc2d00341a1f71/pimoroni_bme280-1.0.0.tar.gz", hash = "sha256:2cafc2b636535c5dc01df37c0b0bd8c0b5d0228da23a177ec8884c31db3ec05c", size = 13125, upload-time = "2023-11-15T11:12:56.48Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4e/15/f04ee9e2bd048be36e7ce67887032f5741a02fa512c4573d68a0e9bba641/pimoroni_bme280-0.1.1-py3-none-any.whl", hash = "sha256:089bccd5b16345117ee7152f65ed7547bb5496bc074ba3cb2061187c263c290c", size = 5515, upload-time = "2020-11-02T10:32:13.25Z" },
+    { url = "https://files.pythonhosted.org/packages/36/6c/76303eaaf79a2e8c68b00875fa8191c422639568e4dc9a3c5ec5b9a34604/pimoroni_bme280-1.0.0-py3-none-any.whl", hash = "sha256:7415a037ba3dd14ce40d705bb006e02f53b276c72aef75fda5ea86daef666a4f", size = 7808, upload-time = "2023-11-15T11:12:54.934Z" },
 ]
 
 [[package]]

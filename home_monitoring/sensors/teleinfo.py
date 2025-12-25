@@ -128,4 +128,4 @@ class TeleinfoPublisher(SensorPublisher):
     def create_observable(self, scheduler) -> None:
         self.measure_obs = rx.create(
             lambda observer, _: self.teleinfo_connector.log_teleinfo_serial(observer)
-        ).pipe(ops.subscribe_on(scheduler))
+        ).pipe(ops.observe_on(scheduler), ops.subscribe_on(scheduler))
