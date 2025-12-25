@@ -1,6 +1,6 @@
 [project]
 name = "home-monitoring"
-version = "1.0.0"
+version = "2.0.0"
 description = "Home sensors logging"
 authors = [{ name = "tdurouchoux", email = "thibault.durouchoux@gmail.com" }]
 requires-python = ">=3.13,<3.14"
