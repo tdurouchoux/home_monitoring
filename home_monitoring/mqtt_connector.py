@@ -80,7 +80,12 @@ class MQTTConnector:
         # ! MISSING client id
 
         # Create MQTT client (using v3.1.1 for better compatibility)
-        self.client = mqtt.Client(client_id=self.client_id, protocol=mqtt.MQTTv311)
+        # Use CallbackAPIVersion.VERSION1 for compatibility with older callback signatures
+        self.client = mqtt.Client(
+            callback_api_version=mqtt.CallbackAPIVersion.VERSION1,
+            client_id=self.client_id,
+            protocol=mqtt.MQTTv311,
+        )
 
         # Set callbacks
         self.client.on_connect = self._on_connect
