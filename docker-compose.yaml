@@ -10,3 +10,4 @@ services:
             - /dev/i2c-1
             - /dev/ttyS0
         network_mode: host
+        command: "/app/config/monitoring_config.yaml --debug"
