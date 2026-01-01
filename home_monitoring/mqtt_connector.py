@@ -23,10 +23,20 @@ class MQTTConnector:
     and automatic reconnection with exponential backoff using tenacity.
     """
 
-    def __init__(self, mqtt_config: MQTTConfig, client_id: str) -> None:
+    def __init__(self, mqtt_config: MQTTConfig, topic_suffix: str) -> None:
+        """
+        Initialize the MQTT connector.
+
+        Args:
+            mqtt_config (MQTTConfig): MQTT configuration.
+            topic_suffix (str): Topic suffix for publishing messages.
+        """
         self.mqtt_config = mqtt_config
-        self.client_id = client_id
-        self.logger = logging.getLogger(client_id)
+        self.client_id = topic_suffix.replace("/", "-")
+        self.topic = f"{self.mqtt_config.base_topic}/{topic_suffix}"
+
+        self.logger = logging.getLogger(self.client_id)
+
         # Connection state
         self.client: Optional[mqtt.Client] = None
         self.connected = False
@@ -147,7 +157,6 @@ class MQTTConnector:
     def publish_message(
         self,
         data: str | bytes | bytearray | None,
-        topic: str,
         qos: int,
         retain: bool,
     ) -> None:
@@ -157,12 +166,13 @@ class MQTTConnector:
         Args:
             measurement: Measurement name (used in topic if no template)
             data: Data to publish (dict, str, int, float, bytes, etc.)
-            topic_template: Custom topic (overrides default {base_topic}/{measurement})
             qos: Quality of service level (MQTT)
             retain: Retain flag
         """
 
-        self.logger.debug(f"Publishing message {data} to MQTT broker for {topic}...")
+        self.logger.debug(
+            "Publishing message %s to MQTT broker for %s ...", data, self.topic
+        )
 
         # Ensure connected
         if self.client is None or not self.connected:
@@ -171,7 +181,7 @@ class MQTTConnector:
         # Publish message
         try:
             result = self.client.publish(
-                topic=topic, payload=data, qos=qos, retain=retain
+                topic=self.topic, payload=data, qos=qos, retain=retain
             )
 
         # ? Create publish error
@@ -184,16 +194,14 @@ class MQTTConnector:
 
         if result.rc != mqtt.MQTT_ERR_SUCCESS:
             self.logger.error(
-                "Failed to publish message to %s, rc=%s", topic, result.rc.name
+                "Failed to publish message to %s, rc=%s", self.topic, result.rc.name
             )
             raise Exception(
-                f"Failed to publish message to {topic}, rc={result.rc.name}"
+                f"Failed to publish message to {self.topic}, rc={result.rc.name}"
             )
 
     def setup_publishing(
         self,
-        sensor_name: str,
-        sensor_location: str,
         measures_obs: rx.Observable,
         qos: int = 1,
         retain: bool = False,
@@ -202,8 +210,6 @@ class MQTTConnector:
         Subscribe to an observable and publish measurements to MQTT.
 
         Args:
-            sensor_name: Name of the sensor
-            sensor_location: Location of the sensor
             measures_obs: Observable emitting measurement data
             qos: Quality of service level for MQTT messages
             retain: Retain flag for MQTT messages
@@ -211,12 +217,7 @@ class MQTTConnector:
         Returns:
             Observable with serialization and publishing operations added
         """
-        self.logger.info(
-            f"Setting up observable for {sensor_name} at {sensor_location}..."
-        )
-
-        # Build topic
-        topic = f"{self.mqtt_config.base_topic}/{sensor_location}/{sensor_name}"
+        self.logger.info(f"Setting up observable for %s ...", self.client_id)
 
         # Ensure connection
         if self.client is None or not self.connected:
@@ -227,9 +228,7 @@ class MQTTConnector:
             # Step 1: Serialize data to bytes
             ops.map(self.serialize_payload),
             # Step 2: Publish to MQTT (side effect),
-            ops.do_action(
-                on_next=lambda data: self.publish_message(data, topic, qos, retain)
-            ),
+            ops.do_action(on_next=lambda data: self.publish_message(data, qos, retain)),
         )
 
         return publish_pipeline

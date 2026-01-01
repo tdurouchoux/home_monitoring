@@ -7,35 +7,30 @@ mqtt:
 
 sensors:
     - type: system_usage
-      name: system_usage
+      name: RPI
       location: living_room
       nb_retry_measure: 3
       qos: 1
       period: 1
       buffer_time: 10
       buffer_op: max
-      parameters:
-          cpu: true
-          ram: true
-          memory: true
-          temperature: true
 
     - type: bme280
-      name: bme280
+      name: Bedroom sensor
       location: bedroom
       nb_retry_measure: 3
       qos: 1
       period: 5
 
     - type: bme680
-      name: bme680
+      name: Kitchen sensor
       location: kitchen
       nb_retry_measure: 3
       qos: 1
       period: 5
 
     - type: teleinfo
-      name: teleinfo
+      name: Linky
       location: garage
       nb_retry_measure: 3
       qos: 1

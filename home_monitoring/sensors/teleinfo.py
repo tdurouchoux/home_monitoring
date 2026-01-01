@@ -9,6 +9,22 @@ from home_monitoring.sensor_publisher import SensorPublisher
 
 logger = logging.getLogger(__name__)
 
+# Exemple de trame:
+# {
+#  'BASE': '123456789'       # Index heure de base en Wh
+#  'OPTARIF': 'HC..',        # Option tarifaire HC/BASE
+#  'IMAX': '007',            # Intensité max
+#  'HCHC': '040177099',      # Index heure creuse en Wh
+#  'IINST': '005',           # Intensité instantanée en A
+#  'PAPP': '01289',          # Puissance Apparente, en VA
+#  'MOTDETAT': '000000',     # Mot d'état du compteur
+#  'HHPHC': 'A',             # Horaire Heures Pleines Heures Creuses
+#  'ISOUSC': '45',           # Intensité souscrite en A
+#  'ADCO': '000000000000',   # Adresse du compteur
+#  'HCHP': '035972694',      # index heure pleine en Wh
+#  'PTEC': 'HP..'            # Période tarifaire en cours
+# }
+
 
 class FailedChecksumError(Exception):
     def __init__(self, key, value):
@@ -20,24 +36,31 @@ class FailedChecksumError(Exception):
 
 
 class TeleinfoConnector:
-    # Exemple de trame:
-    # {
-    #  'BASE': '123456789'       # Index heure de base en Wh
-    #  'OPTARIF': 'HC..',        # Option tarifaire HC/BASE
-    #  'IMAX': '007',            # Intensité max
-    #  'HCHC': '040177099',      # Index heure creuse en Wh
-    #  'IINST': '005',           # Intensité instantanée en A
-    #  'PAPP': '01289',          # Puissance Apparente, en VA
-    #  'MOTDETAT': '000000',     # Mot d'état du compteur
-    #  'HHPHC': 'A',             # Horaire Heures Pleines Heures Creuses
-    #  'ISOUSC': '45',           # Intensité souscrite en A
-    #  'ADCO': '000000000000',   # Adresse du compteur
-    #  'HCHP': '035972694',      # index heure pleine en Wh
-    #  'PTEC': 'HP..'            # Période tarifaire en cours
-    # }
-
     # clés téléinfo
-    LOG_KEYS = ["BASE", "IINST", "PAPP"]
+    MODEL: str = "TELEINFO"
+    MESSAGE_CONTENT: dict[str, dict] = {
+        "BASE": {
+            "name": "Total energy",
+            "device_class": "energy",
+            "state_class": "total",
+            "unit_of_measurement": "Wh",
+            "value_template": "{{ value_json.BASE }}",
+        },
+        "IINST": {
+            "name": "Current",
+            "device_class": "current",
+            "state_class": "measurement",
+            "unit_of_measurement": "A",
+            "value_template": "{{ value_json.IINST }}",
+        },
+        "PAPP": {
+            "name": "Apparent power",
+            "device_class": "apparent_power",
+            "state_class": "measurement",
+            "unit_of_measurement": "VA",
+            "value_template": "{{ value_json.PAPP }}",
+        },
+    }
 
     # clés avec une valeur entière
     INT_MEASURE_KEYS = ["BASE", "IMAX", "IINST", "PAPP"]
@@ -85,7 +108,7 @@ class TeleinfoConnector:
 
                 [key, val, *_] = line_str.split(" ")
 
-                if key in self.LOG_KEYS:
+                if key in self.MESSAGE_CONTENT:
                     checksum = (line_str.replace("\x03\x02", ""))[-3:-2]
 
                     logger.debug(
