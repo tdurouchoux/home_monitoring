@@ -1,6 +1,6 @@
 services:
     homemonitoring:
-        image: test_home_monitoring
+        image: ghcr.io/tdurouchoux/home_monitoring:latest
         container_name: homemonitoring
         restart: unless-stopped
         volumes:
