@@ -37,32 +37,9 @@ class FailedChecksumError(Exception):
 
 class TeleinfoConnector:
     # clés téléinfo
-    MODEL: str = "TELEINFO"
-    MESSAGE_CONTENT: dict[str, dict] = {
-        "BASE": {
-            "name": "Total energy",
-            "device_class": "energy",
-            "state_class": "total",
-            "unit_of_measurement": "Wh",
-            "value_template": "{{ value_json.BASE }}",
-        },
-        "IINST": {
-            "name": "Current",
-            "device_class": "current",
-            "state_class": "measurement",
-            "unit_of_measurement": "A",
-            "value_template": "{{ value_json.IINST }}",
-        },
-        "PAPP": {
-            "name": "Apparent power",
-            "device_class": "apparent_power",
-            "state_class": "measurement",
-            "unit_of_measurement": "VA",
-            "value_template": "{{ value_json.PAPP }}",
-        },
-    }
 
     # clés avec une valeur entière
+    LOG_KEYS = ["BASE", "IINST", "PAPP"]
     INT_MEASURE_KEYS = ["BASE", "IMAX", "IINST", "PAPP"]
 
     BAUD_RATE = 1200
@@ -108,7 +85,7 @@ class TeleinfoConnector:
 
                 [key, val, *_] = line_str.split(" ")
 
-                if key in self.MESSAGE_CONTENT:
+                if key in self.LOG_KEYS:
                     checksum = (line_str.replace("\x03\x02", ""))[-3:-2]
 
                     logger.debug(
@@ -134,6 +111,31 @@ class TeleinfoConnector:
 
 
 class TeleinfoPublisher(SensorPublisher):
+    MODEL: str = "TELEINFO"
+    MESSAGE_CONTENT: dict[str, dict] = {
+        "BASE": {
+            "name": "Total energy",
+            "device_class": "energy",
+            "state_class": "total",
+            "unit_of_measurement": "Wh",
+            "value_template": "{{ value_json.BASE }}",
+        },
+        "IINST": {
+            "name": "Current",
+            "device_class": "current",
+            "state_class": "measurement",
+            "unit_of_measurement": "A",
+            "value_template": "{{ value_json.IINST }}",
+        },
+        "PAPP": {
+            "name": "Apparent power",
+            "device_class": "apparent_power",
+            "state_class": "measurement",
+            "unit_of_measurement": "VA",
+            "value_template": "{{ value_json.PAPP }}",
+        },
+    }
+
     def __init__(
         self,
         sensor_config: config.SensorConfig,
