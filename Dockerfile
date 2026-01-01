@@ -11,5 +11,5 @@ COPY . /app
 WORKDIR /app
 RUN uv sync --frozen --no-cache
 
-ENTRYPOINT [ "uv", "run", "launch_monitoring"]
+ENTRYPOINT [ "uv", "run", "app.py", "monitor"]
 CMD ["/app/config/monitoring_config.yaml"]

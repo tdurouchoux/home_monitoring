@@ -1,7 +1,6 @@
 import atexit
 import logging
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
@@ -14,17 +13,21 @@ from home_monitoring.mqtt_connector import MQTTConnector
 logger = logging.getLogger(__name__)
 
 
-@dataclass
 class SensorPublisher(ABC):
+    MODEL: str = ""
+    MESSAGE_CONTENT: dict[str, dict] = {}
+
     def __init__(
         self,
         sensor_config: config.SensorConfig,
         mqtt_config: config.MQTTConfig,
     ) -> None:
         self.sensor_config = sensor_config
-        self.mqtt_connector = MQTTConnector(
-            mqtt_config, client_id=f"{sensor_config.type}-{sensor_config.name}"
+
+        topic_suffix = (
+            f"{sensor_config.location}/{sensor_config.name.lower().replace(' ', '-')}"
         )
+        self.mqtt_connector = MQTTConnector(mqtt_config, topic_suffix=topic_suffix)
         self.measure_obs: rx.Observable = None
 
     @abstractmethod
@@ -47,8 +50,6 @@ class SensorPublisher(ABC):
         logger.info("Launching %s measures ...", self.sensor_config.name)
 
         publish_pipeline = self.mqtt_connector.setup_publishing(
-            self.sensor_config.name,
-            self.sensor_config.location,
             self.measure_obs,
             qos=self.sensor_config.qos,
             retain=self.sensor_config.retain,
@@ -71,6 +72,31 @@ class SensorPublisher(ABC):
                 f"Fatal error for {self.sensor_config.name}: {e}"
             )
         )
+
+    def get_ha_configuration(self) -> list[dict]:
+        ha_configuration = []
+
+        for entity_config in self.MESSAGE_CONTENT.values():
+            unique_id = f"{self.mqtt_connector.client_id.replace('-', '.')}.{entity_config['name'].lower()}"
+
+            ha_configuration.append(
+                {
+                    "unique_id": unique_id,
+                    "entity_category": "diagnostic",
+                    "state_topic": self.mqtt_connector.topic,
+                    "device": {
+                        "name": self.sensor_config.name,
+                        "model": self.MODEL,
+                        "suggested_area": self.sensor_config.location,
+                        "identifiers": [
+                            self.mqtt_connector.client_id.replace("-", ".")
+                        ],
+                    },
+                }
+                | entity_config
+            )
+
+        return ha_configuration
 
 
 class IntervalSensorPublisher(SensorPublisher):

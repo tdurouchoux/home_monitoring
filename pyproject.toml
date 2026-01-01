@@ -19,9 +19,6 @@ dependencies = [
     "typer>=0.21.0",
 ]
 
-[project.scripts]
-launch_monitoring = "home_monitoring.launch_monitoring:app"
-
 [dependency-groups]
 teleinfo = ["pyserial>=3.5,<4"]
 system_usage = ["psutil>=5.9.4,<6"]

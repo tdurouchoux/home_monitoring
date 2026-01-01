@@ -10,6 +10,37 @@ logger = logging.getLogger(__name__)
 
 
 class BME680Publisher(IntervalSensorPublisher):
+    MODEL: str = "BME680"
+    MESSAGE_CONTENT: dict[str, dict] = {
+        "temperature": {
+            "name": "Temperature",
+            "device_class": "temperature",
+            "state_class": "measurement",
+            "unit_of_measurement": "°C",
+            "value_template": "{{ value_json.temperature }}",
+        },
+        "pressure": {
+            "name": "Pressure",
+            "device_class": "atmospheric_pressure",
+            "state_class": "measurement",
+            "unit_of_measurement": "hPa",
+            "value_template": "{{ value_json.pressure }}",
+        },
+        "humidity": {
+            "name": "Humidity",
+            "device_class": "humidity",
+            "state_class": "measurement",
+            "unit_of_measurement": "%",
+            "value_template": "{{ value_json.humidity }}",
+        },
+        "aqi": {
+            "name": "Air Quality Index",
+            "device_class": "aqi",
+            "state_class": "measurement",
+            "value_template": "{{ value_json.aqi }}",
+        },
+    }
+
     def __init__(
         self,
         sensor_config: config.SensorConfig,
