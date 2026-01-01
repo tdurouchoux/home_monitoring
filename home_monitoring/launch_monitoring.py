@@ -5,7 +5,7 @@ import time
 from pathlib import Path
 from typing import Dict
 
-import click
+import typer
 from dotenv import load_dotenv
 from reactivex.scheduler import ThreadPoolScheduler
 
@@ -14,11 +14,20 @@ from home_monitoring.sensors import SENSORS
 
 load_dotenv()
 
+app = typer.Typer()
 
-@click.command()
-@click.argument("config_directory")
-def main(config_directory: str) -> None:
+
+@app.command()
+def main(
+    config_directory: str,
+    debug: bool = typer.Option(False, "--debug", help="Enable debug logging"),
+) -> None:
     logger_config, monitoring_config = config.load_config(Path(config_directory))
+
+    # Update logging config if debug mode is enabled
+    if debug:
+        logger_config["root"]["level"] = "DEBUG"
+        logger_config["handlers"]["console_handler"]["level"] = "DEBUG"
     mqtt_config = monitoring_config.mqtt
     sensors_config = monitoring_config.sensors
 
@@ -51,4 +60,4 @@ def main(config_directory: str) -> None:
 
 
 if __name__ == "__main__":
-    main()
+    app()
