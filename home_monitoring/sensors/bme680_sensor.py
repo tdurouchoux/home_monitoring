@@ -78,8 +78,8 @@ class BME680Publisher(IntervalSensorPublisher):
         )
 
         return {
-            "temperature": self.sensor.data.temperature,
-            "pressure": self.sensor.data.pressure,
-            "humidity": self.sensor.data.humidity,
+            "temperature": round(self.sensor.data.temperature, 2),
+            "pressure": round(self.sensor.data.pressure, 2),
+            "humidity": round(self.sensor.data.humidity, 2),
             "aqi": aqi,
         }

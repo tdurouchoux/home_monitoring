@@ -47,4 +47,7 @@ class BME280Publisher(IntervalSensorPublisher):
     def get_measure(self) -> dict:
         self.bme280_sensor.update_sensor()
 
-        return {key: getattr(self.bme280_sensor, key) for key in self.MESSAGE_CONTENT}
+        return {
+            key: round(getattr(self.bme280_sensor, key), 2)
+            for key in self.MESSAGE_CONTENT
+        }
