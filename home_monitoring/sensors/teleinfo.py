@@ -9,7 +9,7 @@ from home_monitoring.sensor_publisher import SensorPublisher
 
 logger = logging.getLogger(__name__)
 
-# Exemple de trame:
+# Exemple de frame:
 # {
 #  'BASE': '123456789'       # Index heure de base en Wh
 #  'OPTARIF': 'HC..',        # Option tarifaire HC/BASE
@@ -58,56 +58,74 @@ class TeleinfoConnector:
 
         return checksum == chr(sum_unicode)
 
-    def log_teleinfo_serial(self, observer):
-        logger.debug("Starting serial listening ...")
-
-        with serial.Serial(
+    def _get_serial_context(self) -> serial.Serial:
+        return serial.Serial(
             port=self.serial_port,
             baudrate=self.BAUD_RATE,
             parity=serial.PARITY_NONE,
             stopbits=serial.STOPBITS_ONE,
             bytesize=serial.SEVENBITS,
             timeout=self.TIMEOUT,
-        ) as ser:
-            logger.debug("Waiting for frame start ...")
+        )
 
+    def _wait_for_frame_start(self, ser: serial.Serial):
+        logger.debug("Waiting for frame start ...")
+
+        line = ser.readline()
+        while b"\x02" not in line:  # recherche du caractère de début de frame
             line = ser.readline()
-            while b"\x02" not in line:  # recherche du caractère de début de trame
-                line = ser.readline()
+
+    def _read_frame(self, ser: serial.Serial, all_keys: bool = False) -> dict:
+        frame = dict()
+        line = ""
+
+        while b"\x03" not in line:
+            line = ser.readline()
+            line_str = line.decode("utf-8")
+
+            [key, val, *_] = line_str.split(" ")
+
+            if not all_keys and key not in self.LOG_KEYS:
+                continue
+
+            checksum = (line_str.replace("\x03\x02", ""))[-3:-2]
+
+            logger.debug(
+                f"Parsed following information : key=%s val=%s checksum=%s",
+                key,
+                val,
+                checksum,
+            )
+
+            if self.verif_checksum(f"{key} {val}", checksum):
+                # creation du champ pour la frame en cours avec cast des valeurs de mesure en "integer"
+                frame[key] = int(val) if key in self.INT_MEASURE_KEYS else val
+            else:
+                raise FailedChecksumError(key, val)
+
+        logger.debug(f"Received teleinfo measures: {frame}")
+
+        return frame
+
+    def get_single_frame(self, all_keys: bool = False):
+        with self._get_serial_context() as ser:
+            self._wait_for_frame_start(self, ser)
 
             logger.debug("Frame start detected, starting monitoring ...")
+            frame = self._read_frame(ser, all_keys=all_keys)
+            logger.debug(f"Received teleinfo measures: {frame}")
+            return frame
 
-            trame = dict()
-            line = ser.readline()
+    def log_teleinfo_serial(self, observer):
+        logger.debug("Starting serial listening ...")
 
+        with self._get_serial_context() as ser:
+            self._wait_for_frame_start(self, ser)
+
+            logger.debug("Frame start detected, starting monitoring ...")
             while True:
-                line_str = line.decode("utf-8")
-
-                [key, val, *_] = line_str.split(" ")
-
-                if key in self.LOG_KEYS:
-                    checksum = (line_str.replace("\x03\x02", ""))[-3:-2]
-
-                    logger.debug(
-                        f"Parsed following information : key=%s val=%s checksum=%s",
-                        key,
-                        val,
-                        checksum,
-                    )
-
-                    if self.verif_checksum(f"{key} {val}", checksum):
-                        # creation du champ pour la trame en cours avec cast des valeurs de mesure en "integer"
-                        trame[key] = int(val) if key in self.INT_MEASURE_KEYS else val
-                    else:
-                        raise FailedChecksumError(key, val)
-
-                if b"\x03" in line:
-                    logger.debug(f"Received teleinfo measures: {trame}")
-
-                    observer.on_next(trame)
-
-                    trame = dict()
-                line = ser.readline()
+                frame = self._read_frame(ser)
+                observer.on_next(frame)
 
 
 class TeleinfoPublisher(SensorPublisher):
