@@ -77,7 +77,7 @@ class TeleinfoConnector:
 
     def _read_frame(self, ser: serial.Serial, all_keys: bool = False) -> dict:
         frame = dict()
-        line = ""
+        line = b""
 
         while b"\x03" not in line:
             line = ser.readline()
