@@ -109,7 +109,7 @@ class TeleinfoConnector:
 
     def get_single_frame(self, all_keys: bool = False):
         with self._get_serial_context() as ser:
-            self._wait_for_frame_start(self, ser)
+            self._wait_for_frame_start(ser)
 
             logger.debug("Frame start detected, starting monitoring ...")
             frame = self._read_frame(ser, all_keys=all_keys)
@@ -120,7 +120,7 @@ class TeleinfoConnector:
         logger.debug("Starting serial listening ...")
 
         with self._get_serial_context() as ser:
-            self._wait_for_frame_start(self, ser)
+            self._wait_for_frame_start(ser)
 
             logger.debug("Frame start detected, starting monitoring ...")
             while True:
